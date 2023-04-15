@@ -1,0 +1,4 @@
+chromadb
+langchain
+llama-cpp-python
+pyyaml
