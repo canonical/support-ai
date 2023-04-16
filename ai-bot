@@ -9,7 +9,7 @@ CONFIG_PATH = "config.yaml"
 with open(CONFIG_PATH, 'r') as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
 
-if 'data_path' not in data or 'model_path' not in data:
+if 'data_dir' not in data or 'model_path' not in data:
     sys.exit("Unexpected config format [{}]".format(data))
 
-Bot(data['data_path'], data['model_path']).run()
+Bot(data['data_dir'], data['model_path']).run()

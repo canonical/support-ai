@@ -1,15 +1,44 @@
-from langchain.document_loaders import TextLoader
+import glob
+import os
+from langchain.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 
-class VectorStore:
-    def __init__(self, data_path, embedding):
-        loader = TextLoader(data_path)
-        documents = loader.load()
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        docs = text_splitter.split_documents(documents)
+VECTORDB_DIR = 'db'
 
-        self.db = Chroma.from_documents(docs, embedding)
+class VectorStore:
+    def __init__(self, data_dir, embedding):
+        self.data_dir = data_dir
+        docs, file_list = self.__get_docs()
+        if docs:
+            self.db = Chroma.from_documents(documents=docs, embedding=embedding, persist_directory=VECTORDB_DIR)
+            self.__remove_files(file_list)
+        else:
+            self.db = Chroma(embedding_function=embedding, persist_directory=VECTORDB_DIR)
+
+    def __del__(self):
+        self.db.persist()
+
+    def __get_docs(self):
+        documents = []
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        file_list = glob.glob(os.path.join(self.data_dir, "*.data"))
+        for file in file_list:
+            documents.extend(TextLoader(file).load())
+        return text_splitter.split_documents(documents), file_list
+
+    def __remove_files(self, file_list):
+        for file in file_list:
+            os.remove(file)
+
+    def update(self):
+        docs, file_list = self.__get_docs()
+        if not docs:
+            return
+        texts = [doc.page_content for doc in docs]
+        metadatas = [doc.metadata for doc in docs]
+        self.db.add_texts(texts=texts, metadatas=metadatas)
+        self.__remove_files(file_list)
 
     def search(self, query):
         docs = self.db.similarity_search(query)

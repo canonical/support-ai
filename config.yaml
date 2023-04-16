@@ -1,2 +1,2 @@
-data_path: data.txt
+data_dir: data
 model_path: ggml.bin

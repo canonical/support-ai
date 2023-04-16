@@ -1,18 +1,30 @@
+import time
+import threading
 from .vectorstore import VectorStore
 from .llm import LLM
 
-class Bot:
-    def __init__(self, data_path, model_path):
-        self.llm = LLM(model_path)
-        self.vector_store = VectorStore(data_path, self.llm.embedding)
+stop_event = threading.Event()
 
-    def load_data(self):
-        self.vector_store.load()
+class Bot:
+    def __init__(self, data_dir, model_path):
+        self.llm = LLM(model_path)
+        self.vector_store = VectorStore(data_dir, self.llm.embedding)
+
+    def update_vectordb(self):
+        while not stop_event.is_set():
+            self.vector_store.update()
+            time.sleep(10)
 
     def run(self):
-        self.load_data()
+        update_vectordb_thread = threading.Thread(target=self.update_vectordb)
 
+        stop_event.clear()
+        update_vectordb_thread.start()
         while True:
             query = input(">")
+            if query == 'exit':
+                break
             reply = self.vector_store.search(query)
             print("{}".format(reply))
+        stop_event.set()
+        update_vectordb_thread.join()
