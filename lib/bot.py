@@ -6,9 +6,9 @@ from .llm import LLM
 stop_event = threading.Event()
 
 class Bot:
-    def __init__(self, data_dir, model_path):
+    def __init__(self, data_dir, model_path, qa_chain_type):
         self.llm = LLM(model_path)
-        self.vector_store = VectorStore(data_dir, self.llm.embedding)
+        self.vector_store = VectorStore(data_dir, qa_chain_type, self.llm)
 
     def update_vectordb(self):
         while not stop_event.is_set():

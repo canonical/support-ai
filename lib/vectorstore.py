@@ -1,5 +1,6 @@
 import glob
 import os
+from langchain.chains import RetrievalQA
 from langchain.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
@@ -7,14 +8,15 @@ from langchain.vectorstores import Chroma
 VECTORDB_DIR = 'db'
 
 class VectorStore:
-    def __init__(self, data_dir, embedding):
+    def __init__(self, data_dir, qa_chain_type, llm):
         self.data_dir = data_dir
         docs, file_list = self.__get_docs()
         if docs:
-            self.db = Chroma.from_documents(documents=docs, embedding=embedding, persist_directory=VECTORDB_DIR)
+            self.db = Chroma.from_documents(documents=docs, embedding=llm.embedding, persist_directory=VECTORDB_DIR)
             self.__remove_files(file_list)
         else:
-            self.db = Chroma(embedding_function=embedding, persist_directory=VECTORDB_DIR)
+            self.db = Chroma(embedding_function=llm.embedding, persist_directory=VECTORDB_DIR)
+        self.qa = RetrievalQA.from_chain_type(llm=llm.llm, chain_type=qa_chain_type, retriever=self.db.as_retriever())
 
     def __del__(self):
         self.db.persist()
@@ -41,5 +43,4 @@ class VectorStore:
         self.__remove_files(file_list)
 
     def search(self, query):
-        docs = self.db.similarity_search(query)
-        return docs[0].page_content
+        return self.qa.run(query)
