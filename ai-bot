@@ -7,10 +7,10 @@ from lib.bot import Bot
 CONFIG_PATH = "config.yaml"
 
 with open(CONFIG_PATH, 'r') as f:
-    data = yaml.load(f, Loader=yaml.FullLoader)
+    config = yaml.load(f, Loader=yaml.FullLoader)
 
-for label in ['data_dir', 'model_path', 'qa_chain_type']:
-    if label not in data:
-        sys.exit("Unexpected config format [{}]".format(data))
+for label in ['data_dir', 'model_path']:
+    if label not in config:
+        sys.exit("Unexpected config format [{}]".format(config))
 
-Bot(data['data_dir'], data['model_path'], data['qa_chain_type']).run()
+Bot(config).run()
