@@ -1,3 +1,4 @@
 data_dir: "data"
 model_path: "ggml.bin"
 qa_chain_type: "stuff"
+max_res_num: 3

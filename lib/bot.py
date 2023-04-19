@@ -12,10 +12,11 @@ class Bot:
         data_dir = config['data_dir']
         model_path = config['model_path']
         qa_chain_type = config['qa_chain_type'] if 'qa_chain_type' in config else 'stuff'
+        max_res_num = config['max_res_num'] if 'max_res_num' in config else 3
         self.llm = LLM(model_path)
         self.prompt_generator = PromptGenerator()
         self.vector_store = VectorStore(data_dir, self.llm)
-        self.qa_chain = QAChain(qa_chain_type, self.llm, self.vector_store, self.prompt_generator)
+        self.qa_chain = QAChain(qa_chain_type, max_res_num, self.llm, self.vector_store, self.prompt_generator)
 
     def update_vectordb(self):
         while not stop_event.is_set():
@@ -31,7 +32,7 @@ class Bot:
             query = input(">")
             if query == 'exit':
                 break
-            reply = self.qa_chain.ask(query)
-            print("{}".format(reply))
+            replies = self.qa_chain.ask(query)
+            print("{}".format(replies))
         stop_event.set()
         update_vectordb_thread.join()
