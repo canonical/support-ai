@@ -12,6 +12,7 @@ class VectorStore:
         docs, file_list = self.__get_docs()
         if docs:
             self.db = Chroma.from_documents(documents=docs, embedding=llm.embedding, persist_directory=VECTORDB_DIR)
+            self.db.persist()
             self.__remove_files(file_list)
         else:
             self.db = Chroma(embedding_function=llm.embedding, persist_directory=VECTORDB_DIR)
