@@ -1,4 +1,6 @@
 chromadb
 langchain
 llama-cpp-python
+openai
 pyyaml
+tiktoken

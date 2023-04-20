@@ -1,4 +1,9 @@
+default_llm: "llamacpp" # ["llamacpp", "openai"]
 data_dir: "data"
-model_path: "ggml.bin"
-qa_chain_type: "stuff"
+llamacpp:
+  model_path: "ggml.bin"
+openai:
+  openai_api_key: "YOUR_KEY"
+  model_name: "text-davinci-003" # refer to langchain/callbacks/openai_info.py for others
+qa_chain_type: "stuff" # ["stuff", "map_reduce", "map_rerank", "refine"]
 max_res_num: 3
