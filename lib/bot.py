@@ -42,8 +42,13 @@ class Bot:
         update_vectordb_thread.start()
         while True:
             query = input(">")
-            if query == 'exit':
+            """transfer query to lower case"""
+            query = query.lower().strip()
+            if query in ['exit', 'quit', 'q', 'e', 'x']:
                 break
+
+            if not query:
+                continue
             replies = self.qa_chain.ask(query)
             print("{}".format(replies))
         stop_event.set()
