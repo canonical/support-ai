@@ -1,9 +1,11 @@
-default_llm: "llamacpp" # ["llamacpp", "openai"]
+default_llm: "llamacpp" # ["llamacpp", "openai", "huggingface_pipeline"]
 data_dir: "data"
 llamacpp:
   model_path: "ggml.bin"
 openai:
   openai_api_key: "YOUR_KEY"
   model_name: "text-davinci-003" # refer to langchain/callbacks/openai_info.py for others
+huggingface_pipeline:
+  model_name: "MODEL_IN_HUGGINGFACE"
 qa_chain_type: "stuff" # ["stuff", "map_reduce", "map_rerank", "refine"]
 max_res_num: 3
