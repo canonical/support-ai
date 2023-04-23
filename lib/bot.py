@@ -15,14 +15,12 @@ class Bot:
         data_dir = config.get('data_dir')
         if data_dir is None:
             raise ValueError("data_dir is necessary; however, the config is [{}]".format(config))
-
         qa_chain_type = config.get('qa_chain_type', 'stuff')
-        max_res_num = config.get('max_res_num', 3)
 
         self.llm = LLM(config)
         self.prompt_generator = PromptGenerator()
         self.vector_store = VectorStore(data_dir, self.llm)
-        self.qa_chain = QAChain(qa_chain_type, max_res_num, self.llm, self.vector_store, self.prompt_generator)
+        self.qa_chain = QAChain(qa_chain_type, self.llm, self.vector_store, self.prompt_generator)
 
     def run(self):
         while True:
@@ -31,8 +29,7 @@ class Bot:
             query = query.lower().strip()
             if query in ['exit', 'quit', 'q', 'e', 'x']:
                 break
-
             if not query:
                 continue
-            replies = self.qa_chain.ask(query)
-            print("{}".format(replies))
+            reply = self.qa_chain.ask(query)
+            print("{}".format(reply))

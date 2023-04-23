@@ -8,4 +8,3 @@ openai:
 huggingface_pipeline:
   model_name: "MODEL_IN_HUGGINGFACE" # databricks/dolly-v2-12b
 qa_chain_type: "stuff" # ["stuff", "map_reduce", "map_rerank", "refine"]
-max_res_num: 3

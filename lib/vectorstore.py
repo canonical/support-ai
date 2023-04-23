@@ -2,6 +2,7 @@ import hashlib
 import glob
 import os
 import queue
+from functools import reduce
 from langchain.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
@@ -93,3 +94,16 @@ class VectorStore:
             if docs:
                 collection_docs[collection_name] = (md5.hexdigest(), docs)
         return collection_docs
+
+    def similarity_search(self, question):
+        docs = []
+        score_max = 0
+        for _, db in self.dbs.items():
+            _docs_with_score = db.similarity_search_with_score(question, k=3)
+            score_avg = reduce(lambda score, doc_with_score: score + doc_with_score[1], _docs_with_score, 0) / len(_docs_with_score)
+            if score_avg > score_max:
+                docs.clear()
+                for doc, _ in _docs_with_score:
+                    docs.append(doc)
+                score_max = score_avg
+        return docs
