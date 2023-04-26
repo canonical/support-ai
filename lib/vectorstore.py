@@ -99,7 +99,7 @@ class VectorStore:
         docs = []
         score_max = 0
         for _, db in self.dbs.items():
-            _docs_with_score = db.similarity_search_with_score(question, k=3)
+            _docs_with_score = db.similarity_search_with_score(question, k=1)
             score_avg = reduce(lambda score, doc_with_score: score + doc_with_score[1], _docs_with_score, 0) / len(_docs_with_score)
             if score_avg > score_max:
                 docs.clear()
