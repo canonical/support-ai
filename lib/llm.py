@@ -1,5 +1,6 @@
 from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings, HuggingFaceEmbeddings
 from langchain.llms import LlamaCpp, OpenAI, HuggingFacePipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
 def buildLlama(llm_config):
@@ -21,8 +22,12 @@ def buildHuggingfacePipeline(llm_config):
     model_name = llm_config.get('model_name')
     if not model_name:
         raise ValueError("Missing model_name in config")
-    return HuggingFacePipeline.from_model_id(model_id=model_name, task="text-generation"), \
-            HuggingFaceEmbeddings(model_name=model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    pipe = pipeline(
+            "text-generation", model=model, tokenizer=tokenizer, max_new_tokens=120
+    )
+    return HuggingFacePipeline(pipeline=pipe), HuggingFaceEmbeddings(model_name=model_name)
 
 class LLMFactory:
     @staticmethod
