@@ -32,4 +32,4 @@ class Bot:
             if not query:
                 continue
             reply = self.qa_chain.ask(query)
-            print("{}".format(reply))
+            print("{}".format(reply['output_text']))
