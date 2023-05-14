@@ -1,52 +1,113 @@
-from langchain.embeddings import LlamaCppEmbeddings, OpenAIEmbeddings, HuggingFaceEmbeddings
-from langchain.llms import LlamaCpp, OpenAI, HuggingFacePipeline
+"""Language model manager (LLM) and factory for LLMs and embeddings"""
+from abc import ABC, abstractmethod
+from typing import Type
+from langchain.embeddings import (
+    HuggingFaceEmbeddings,
+    LlamaCppEmbeddings,
+    OpenAIEmbeddings,
+)
+from langchain.llms import HuggingFacePipeline, LlamaCpp, OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
-def buildLlama(llm_config):
-    model_path = llm_config.get('model_path')
-    if not model_path:
-        raise ValueError("Missing model_path in config")
-    return LlamaCpp(model_path=model_path, n_ctx=2048), \
-            LlamaCppEmbeddings(model_path=model_path, n_ctx=2048)
+class LLMFactory(ABC):
+    """Abstract factory for LLMs and embeddings"""
 
-def buildOpenAI(llm_config):
-    model_name = llm_config.get('model_name')
-    openai_api_key = llm_config.get('openai_api_key')
-    if not openai_api_key:
-        raise ValueError("Missing openai_api_key in config")
-    return OpenAI(openai_api_key=openai_api_key, model_name=model_name), \
-            OpenAIEmbeddings(openai_api_key=openai_api_key)
+    @abstractmethod
+    def create_llm(self):
+        """Create LLM from LLM config
 
-def buildHuggingfacePipeline(llm_config):
-    model_name = llm_config.get('model_name')
-    if not model_name:
-        raise ValueError("Missing model_name in config")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    pipe = pipeline(
-            "text-generation", model=model, tokenizer=tokenizer, max_new_tokens=120
-    )
-    return HuggingFacePipeline(pipeline=pipe), HuggingFaceEmbeddings(model_name=model_name)
+        Returns:
+            LLM: LLM object
+        """
 
-class LLMFactory:
-    @staticmethod
-    def build (default_llm, llm_config):
-        # create LLM and embedding based on LLM config
-        match default_llm:
-            case 'llamacpp':
-                return buildLlama(llm_config)
-            case 'openai':
-                return buildOpenAI(llm_config)
-            case 'huggingface_pipeline':
-                return buildHuggingfacePipeline(llm_config)
-            case _:
-                raise ValueError("Unknown LLM type: {}".format(default_llm))
+    @abstractmethod
+    def create_embeddings(self):
+        """Create embeddings from LLM config
+
+        Returns:
+            Embeddings: Embeddings object
+        """
+
+
+class HuggingFaceFactory(LLMFactory):
+    """Factory for HuggingFace LLMs and embeddings"""
+
+    def __init__(self, llm_config) -> None:
+        self.model_name: str = llm_config.get('model_name')
+        if not self.model_name:
+            raise ValueError("Missing model_name in config")
+
+    def create_llm(self) -> HuggingFacePipeline:
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        model = AutoModelForCausalLM.from_pretrained(self.model_name)
+        pipe = pipeline(
+            "text-generation",
+            model=model,
+            tokenizer=tokenizer,
+            max_new_tokens=120
+        )
+        return HuggingFacePipeline(pipeline=pipe)
+
+    def create_embeddings(self) -> HuggingFaceEmbeddings:
+        return HuggingFaceEmbeddings(model_name=self.model_name)
+
+
+class LlamaCppFactory(LLMFactory):
+    """Factory for LlamaCpp LLMs and embeddings"""
+
+    def __init__(self, llm_config) -> None:
+        self.model_path: str = llm_config.get('model_path')
+        if not self.model_path:
+            raise ValueError("Missing model_path in config")
+
+    def create_llm(self) -> LlamaCpp:
+        return LlamaCpp(model_path=self.model_path, n_ctx=2048)
+
+    def create_embeddings(self) -> LlamaCppEmbeddings:
+        return LlamaCppEmbeddings(model_path=self.model_path, n_ctx=2048)
+
+
+class OpenAIFactory(LLMFactory):
+    """Factory for OpenAI LLMs and embeddings"""
+
+    def __init__(self, llm_config) -> None:
+        self.model_name: str = llm_config.get('model_name')
+        self.openai_api_key: str = llm_config.get('openai_api_key')
+        if not self.openai_api_key:
+            raise ValueError("Missing openai_api_key in config")
+
+    def create_llm(self) -> OpenAI:
+        return OpenAI(
+            openai_api_key=self.openai_api_key,
+            model_name=self.model_name,
+        )
+
+    def create_embeddings(self) -> OpenAIEmbeddings:
+        return OpenAIEmbeddings(openai_api_key=self.openai_api_key)
+
 
 class LLM:
-    def __init__(self, config):
-        # get default language model (LLM) config
-        default_llm = config.get('default_llm')
-        llm_config = config.get(default_llm)
+    """Language model manager (LLM)"""
 
-        self.llm, self.embedding = LLMFactory.build(default_llm, llm_config)
+    def __init__(self, config: dict) -> None:
+        # get default language model (LLM) config
+        default_llm: str = config.get('default_llm')
+        llm_config: dict = config.get(default_llm)
+
+        factories: dict = {
+            "huggingface_pipeline": HuggingFaceFactory,
+            "llamacpp": LlamaCppFactory,
+            "openai": OpenAIFactory
+        }
+        factory: Type[LLMFactory] = factories.get(default_llm)
+        if not factory:
+            raise ValueError(
+                f"Unknown LLM type: {default_llm}. Valid types are:"
+                f"llamacpp, openai, huggingface_pipeline"
+            )
+
+        # create LLM and embeddings based on LLM config
+        factory: LLMFactory = factory(llm_config)
+        self.llm: LLM = factory.create_llm()
+        self.embeddings = factory.create_embeddings()
