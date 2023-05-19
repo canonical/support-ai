@@ -18,7 +18,7 @@ class Bot:
         qa_chain_type = config.get('qa_chain_type', 'stuff')
 
         self.llm = LLM(config)
-        self.prompt_generator = PromptGenerator()
+        self.prompt_generator = PromptGenerator(config)
         self.vector_store = VectorStore(data_dir, self.llm)
         self.qa_chain = QAChain(qa_chain_type, self.llm, self.vector_store, self.prompt_generator)
 
