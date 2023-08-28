@@ -1,20 +1,20 @@
 import yaml
-from .llm import LLM
-from .prompt_generator import PromptGenerator
-from .qa_chain import QAChain
-from .vectorstore import VectorStore
+from llm import LLM
+from prompt_generator import PromptGenerator
+from qa_chain import QAChain
+from vectorstore import VectorStore
 
 class Bot:
-    def __init__(self, CONFIG_PATH):
-        with open(CONFIG_PATH, 'r') as f:
+    def __init__(self, config_path):
+        with open(config_path, 'r', encoding="utf8") as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
 
         default_llm = config.get('default_llm')
         if default_llm is None:
-            raise ValueError("default_llm is necessary; however, the config is [{}]".format(config))
+            raise ValueError(f'default_llm is necessary; however, the config is [{config}]')
         data_dir = config.get('data_dir')
         if data_dir is None:
-            raise ValueError("data_dir is necessary; however, the config is [{}]".format(config))
+            raise ValueError(f'data_dir is necessary; however, the config is [{config}]')
         qa_chain_type = config.get('qa_chain_type', 'stuff')
 
         self.llm = LLM(config)
@@ -25,11 +25,11 @@ class Bot:
     def run(self):
         while True:
             query = input(">")
-            """transfer query to lower case"""
+            # transfer query to lower case
             query = query.lower().strip()
             if query in ['exit', 'quit', 'q', 'e', 'x']:
                 break
             if not query:
                 continue
             reply = self.qa_chain.ask(query)
-            print("{}".format(reply['output_text']))
+            print(reply['output_text'])

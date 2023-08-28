@@ -12,4 +12,5 @@ class QAChain:
 
     def ask(self, question):
         docs = self.vectordb.similarity_search(question)
-        return self.qa_chain({"input_documents": docs, "question": question}, return_only_outputs=True)
+        return self.qa_chain({"input_documents": docs, "question": question},
+                             return_only_outputs=True)

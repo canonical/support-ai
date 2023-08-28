@@ -1,4 +1,3 @@
-import subprocess
 import os
 
 origdir = os.getcwd()
@@ -6,7 +5,8 @@ gitdir = origdir + '/git-data'
 os.chdir("linux")
 
 #cmd = os.popen('git log --since="2023-01-01" --grep="^mm:" --grep="^mm/.*:" --oneline')
-cmd = os.popen('git log --since="2023-01-01" --grep="^net:" --grep="^net/.*:" --oneline | grep -v " Merge branch "')
+cmd = os.popen('git log --since="2023-01-01" --grep="^net:" --grep="^net/.*:" --oneline '
+               '| grep -v " Merge branch "')
 output = cmd.read()
 output_list = output.splitlines()
 
@@ -21,7 +21,7 @@ else:
 for commit in output_list:
     commit_id = commit.split()[0]
     print('write commit ' + commit_id)
-    with open(gitdir + '/' + commit_id + '.data', 'w') as cfile:
+    with open(gitdir + '/' + commit_id + '.data', 'w', encoding="utf8") as f:
         cmd = os.popen('git show ' + commit.split()[0])
         commit_log = cmd.read()
         commit_log = commit_log.split('diff --git')[0]
@@ -29,9 +29,9 @@ for commit in output_list:
         commit_log_post.insert(3, 'content:')
         for i, line in enumerate(commit_log_post):
             if i < 4:
-                cfile.write(line + '\n')
-            if i >= 4 and i < 50:
-                cfile.write(line)
+                f.write(line + '\n')
+            if 4 <= i < 50:
+                f.write(line)
 
         """
         people = 0
@@ -44,5 +44,5 @@ for commit in output_list:
                 break
         commit_log_post.insert(people, 'people:')
         for i, line in enumerate(commit_log_post):
-            cfile.write(line + '\n')
+            f.write(line + '\n')
         """

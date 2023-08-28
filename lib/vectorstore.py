@@ -19,18 +19,18 @@ class VectorStore:
         self.dbs = {}
         self.__construct()
 
-    def __check_hash_change(self, collection_name, hash):
+    def __check_hash_change(self, collection_name, hash_val):
         meta_path = os.path.join(COLLECTION_METADATA, collection_name)
         if not os.path.exists(meta_path):
             return True
-        with open(meta_path, 'r') as f:
-            _hash = f.read()
-        return hash != _hash
+        with open(meta_path, 'r', encoding="utf8") as f:
+            _hash_val = f.read()
+        return hash_val != _hash_val
 
-    def __store_metadata(self, collection_name, hash):
+    def __store_metadata(self, collection_name, hash_val):
         meta_path = os.path.join(COLLECTION_METADATA, collection_name)
         with open(meta_path, 'w+') as f:
-            f.write(hash)
+            f.write(hash_val)
 
     def __clear_stale_collections(self, collection_names):
         file_list = glob.glob(os.path.join(COLLECTION_METADATA, "*"))
@@ -66,13 +66,13 @@ class VectorStore:
             self.__store_metadata(collection_name, hash_docs[0])
         self.__clear_stale_collections(list(collections.keys()))
 
-    def __calc_hash(self, file, hash):
+    def __calc_hash(self, file, hash_val):
         with open(file, 'rb') as f:
             while True:
                 data = f.read(BUF_SIZE)
                 if not data:
                     break
-                hash.update(data)
+                hash_val.update(data)
 
     def __get_collections(self):
         collection_docs = {}
@@ -80,11 +80,12 @@ class VectorStore:
 
         q.put(self.data_dir)
         while q.empty() is False:
-            dir = q.get()
-            collection_name = DEFAULT_COLLECTION_NAME if dir == self.data_dir else os.path.basename(dir)
+            _dir = q.get()
+            collection_name = DEFAULT_COLLECTION_NAME \
+                    if _dir == self.data_dir else os.path.basename(_dir)
             docs = []
             md5 = hashlib.md5()
-            file_list = glob.glob(os.path.join(dir, "*"))
+            file_list = glob.glob(os.path.join(_dir, "*"))
             for file in file_list:
                 if os.path.isdir(file):
                     q.put(file)
@@ -100,7 +101,8 @@ class VectorStore:
         score_max = 0
         for _, db in self.dbs.items():
             _docs_with_score = db.similarity_search_with_score(question, k=1)
-            score_avg = reduce(lambda score, doc_with_score: score + doc_with_score[1], _docs_with_score, 0) / len(_docs_with_score)
+            score_avg = reduce(lambda score, doc_with_score: \
+                    score + doc_with_score[1], _docs_with_score, 0) / len(_docs_with_score)
             if score_avg > score_max:
                 docs.clear()
                 for doc, _ in _docs_with_score:
