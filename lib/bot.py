@@ -16,11 +16,11 @@ class Bot:
         if data_dir is None:
             raise ValueError(f'data_dir is necessary; however, the config is [{config}]')
         qa_chain_type = config.get('qa_chain_type', 'stuff')
+        llm = LLM(config)
+        prompt_generator = PromptGenerator(config)
+        vector_store = VectorStore(data_dir, llm)
 
-        self.llm = LLM(config)
-        self.prompt_generator = PromptGenerator(config)
-        self.vector_store = VectorStore(data_dir, self.llm)
-        self.qa_chain = QAChain(qa_chain_type, self.llm, self.vector_store, self.prompt_generator)
+        self.qa_chain = QAChain(qa_chain_type, llm, vector_store, prompt_generator)
 
     def run(self):
         while True:
