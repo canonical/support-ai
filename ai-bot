@@ -2,6 +2,6 @@
 
 from lib.bot import Bot
 
-CONFIG_PATH = "config.yaml"
+CONFIG_PATH = "config"
 
 Bot(CONFIG_PATH).run()

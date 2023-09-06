@@ -7,6 +7,7 @@ from langchain.embeddings import (
     OpenAIEmbeddings,
 )
 from langchain.llms import HuggingFacePipeline, LlamaCpp, OpenAI
+from const import CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, CONFIG_LLM, CONFIG_MODEL_NAME, CONFIG_MODEL_PATH, CONFIG_OPENAI, CONFIG_OPENAI_API_KEY, CONFIG_SETTING
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 
@@ -34,7 +35,7 @@ class HuggingFaceFactory(LLMFactory):
     """Factory for HuggingFace LLMs and embeddings"""
 
     def __init__(self, llm_config) -> None:
-        self.model_name: str = llm_config.get('model_name')
+        self.model_name: str = llm_config[CONFIG_MODEL_NAME]
         if not self.model_name:
             raise ValueError("Missing model_name in config")
 
@@ -57,7 +58,7 @@ class LlamaCppFactory(LLMFactory):
     """Factory for LlamaCpp LLMs and embeddings"""
 
     def __init__(self, llm_config) -> None:
-        self.model_path: str = llm_config.get('model_path')
+        self.model_path: str = llm_config[CONFIG_MODEL_PATH]
         if not self.model_path:
             raise ValueError("Missing model_path in config")
 
@@ -72,8 +73,8 @@ class OpenAIFactory(LLMFactory):
     """Factory for OpenAI LLMs and embeddings"""
 
     def __init__(self, llm_config) -> None:
-        self.model_name: str = llm_config.get('model_name')
-        self.openai_api_key: str = llm_config.get('openai_api_key')
+        self.model_name: str = llm_config[CONFIG_MODEL_NAME]
+        self.openai_api_key: str = llm_config[CONFIG_OPENAI_API_KEY]
         if not self.openai_api_key:
             raise ValueError("Missing openai_api_key in config")
 
@@ -90,24 +91,27 @@ class OpenAIFactory(LLMFactory):
 class LLM:
     """Language model manager (LLM)"""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config) -> None:
         # get default language model (LLM) config
-        default_llm: str = config.get('default_llm')
-        llm_config: dict = config.get(default_llm)
+        if CONFIG_LLM not in config[CONFIG_SETTING]:
+            raise ValueError(f'The configuration\'s {CONFIG_SETTING} section doesn\'t contain {CONFIG_LLM}')
+        llm: str = config[CONFIG_SETTING][CONFIG_LLM]
+        if llm not in config:
+            raise ValueError(f'The configuration doesn\'t contain {llm} section')
 
         factories: dict = {
-            "huggingface_pipeline": HuggingFaceFactory,
-            "llamacpp": LlamaCppFactory,
-            "openai": OpenAIFactory
+            CONFIG_HUGGINGFACE_PIPELINE: HuggingFaceFactory,
+            CONFIG_LLAMACPP: LlamaCppFactory,
+            CONFIG_OPENAI: OpenAIFactory
         }
-        factory: Type[LLMFactory] = factories.get(default_llm)
+        factory: Type[LLMFactory] = factories.get(llm)
         if not factory:
             raise ValueError(
-                f"Unknown LLM type: {default_llm}. Valid types are:"
+                f"Unknown LLM type: {llm}. Valid types are:"
                 f"llamacpp, openai, huggingface_pipeline"
             )
 
         # create LLM and embeddings based on LLM config
-        factory: LLMFactory = factory(llm_config)
+        factory: LLMFactory = factory(config[llm])
         self.llm: LLM = factory.create_llm()
         self.embeddings = factory.create_embeddings()
