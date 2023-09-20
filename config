@@ -3,8 +3,8 @@
 llm = huggingface_pipeline
 # ["stuff", "map_reduce", "map_rerank", "refine"]
 qa_chain_type = stuff
-data_dir = data
 prompt = default
+datasources = salesforce
 
 [llamacpp]
 model_path = ggml.bin
@@ -16,3 +16,9 @@ model_name = text-davinci-003
 
 [huggingface_pipeline]
 model_name = databricks/dolly-v2-12b
+
+[salesforce]
+username = 
+password = 
+token = 
+

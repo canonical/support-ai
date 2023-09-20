@@ -1,7 +1,7 @@
 """Generate prompt for question answering chain"""""
 from typing import Optional
 from langchain.prompts import PromptTemplate
-from const import CONFIG_PROMPT, CONFIG_SETTING
+from lib.const import CONFIG_PROMPT, CONFIG_SETTING
 
 THREE_THINGS_PROMPT = """
 Please select three important things that one must know for the problem.
@@ -18,7 +18,8 @@ class PromptGenerator:
     def __init__(self, config) -> None:
         """Initialize prompt generator"""
         if CONFIG_PROMPT not in config[CONFIG_SETTING]:
-            raise ValueError(f'The configuration\'s {CONFIG_SETTING} section doesn\'t contain {CONFIG_PROMPT}')
+            raise ValueError(f'The configuration\'s {CONFIG_SETTING} ' +
+                             f'section doesn\'t contain {CONFIG_PROMPT}')
         self.tempalte_type = config[CONFIG_SETTING][CONFIG_PROMPT]
 
     def get_prompt(self) -> Optional[PromptTemplate]:

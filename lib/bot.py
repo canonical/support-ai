@@ -1,9 +1,10 @@
 import configparser
-from const import CONFIG_DATA_DIR, CONFIG_QA_CHAIN_TYPE, CONFIG_SETTING
-from llm import LLM
-from prompt_generator import PromptGenerator
-from qa_chain import QAChain
-from vectorstore import VectorStore
+import lib.datasources.utils as ds_utils
+from lib.const import CONFIG_QA_CHAIN_TYPE, CONFIG_SETTING
+from lib.llm import LLM
+from lib.datasources.ds_updater import DSUpdater
+from lib.datasources.ds_querier import DSQuerier
+from lib.vectorstore import VectorStore
 
 class Bot:
     def __init__(self, config_path):
@@ -11,19 +12,18 @@ class Bot:
         config.read(config_path)
         if CONFIG_SETTING not in config:
             raise ValueError(f'The configuration doesn\'t contain {CONFIG_SETTING} section')
-        if CONFIG_DATA_DIR not in config[CONFIG_SETTING]:
-            raise ValueError(f'The configuration\'s {CONFIG_SETTING} section doesn\'t contain {CONFIG_DATA_DIR}')
         if CONFIG_QA_CHAIN_TYPE not in config[CONFIG_SETTING]:
-            raise ValueError(f'The configuration\'s {CONFIG_SETTING} section doesn\'t contain {CONFIG_QA_CHAIN_TYPE}')
-        data_dir = config[CONFIG_SETTING][CONFIG_DATA_DIR]
-        qa_chain_type = config[CONFIG_SETTING][CONFIG_QA_CHAIN_TYPE]
+            raise ValueError(f'The configuration\'s {CONFIG_SETTING} ' +
+                             f'section doesn\'t contain {CONFIG_QA_CHAIN_TYPE}')
         llm = LLM(config)
-        prompt_generator = PromptGenerator(config)
-        vector_store = VectorStore(data_dir, llm)
+        vector_store = VectorStore(llm)
+        datasources = ds_utils.get_datasources(config)
 
-        self.qa_chain = QAChain(qa_chain_type, llm, vector_store, prompt_generator)
+        self.ds_updater = DSUpdater(vector_store, datasources)
+        self.ds_querier = DSQuerier(vector_store, datasources)
 
     def run(self):
+        self.ds_updater.start_update()
         while True:
             query = input(">")
             # transfer query to lower case
@@ -32,5 +32,4 @@ class Bot:
                 break
             if not query:
                 continue
-            reply = self.qa_chain.ask(query)
-            print(reply['output_text'])
+            self.ds_querier.query(query)

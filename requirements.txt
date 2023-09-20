@@ -3,4 +3,7 @@ langchain
 llama-cpp-python
 openai
 pyyaml
-tiktoken
+sentence-transformers
+simple_salesforce
+torch
+transformers
