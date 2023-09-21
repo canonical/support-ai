@@ -14,5 +14,9 @@ class Datasource(ABC):
         return NotImplemented
 
     @abstractmethod
+    def get_summary_prompt(self):
+        return NotImplemented
+
+    @abstractmethod
     def get_content(self, doc):
         return NotImplemented

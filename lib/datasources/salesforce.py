@@ -37,6 +37,11 @@ class SalesforceSource(Datasource):
                     case['CaseNumber']
             )
 
+    def get_summary_prompt(self):
+        return """Write a concise summary of the following:
+            "{context}"
+            CONCISE SUMMARY:"""
+
     def get_content(self, doc):
         content = ''
         comments = self.sf.query_all(f'SELECT CommentBody FROM CaseComment ' +
@@ -46,4 +51,4 @@ class SalesforceSource(Datasource):
             if content:
                 content += '\n'
             content += comment['CommentBody']
-        return content
+        return [content]

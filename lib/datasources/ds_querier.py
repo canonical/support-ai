@@ -23,4 +23,4 @@ class DSQuerier:
         docs = self.vector_store.similarity_search(ds_type, collection, query)
 
         for doc in docs:
-            print(ds.get_content(doc))
+            yield (ds.get_summary_prompt(), ds.get_content(doc))

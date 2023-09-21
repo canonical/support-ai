@@ -57,10 +57,10 @@ class LlamaCppFactory(LLMFactory):
             raise ValueError("Missing model_path in config")
 
     def create_llm(self) -> LlamaCpp:
-        return LlamaCpp(model_path=self.model_path, n_ctx=2048)
+        return LlamaCpp(model_path=self.model_path, n_ctx=4096)
 
     def create_embeddings(self) -> LlamaCppEmbeddings:
-        return LlamaCppEmbeddings(model_path=self.model_path, n_ctx=2048)
+        return LlamaCppEmbeddings(model_path=self.model_path, n_ctx=4096)
 
 
 class OpenAIFactory(LLMFactory):
