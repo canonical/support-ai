@@ -13,3 +13,5 @@ CONFIG_SF = 'salesforce'
 CONFIG_SF_USERNAME = 'username'
 CONFIG_SF_PASSWORD = 'password'
 CONFIG_SF_TOKEN = 'token'
+
+META_DIR = 'metadata/'

@@ -21,13 +21,13 @@ class SalesforceSource(Datasource):
         }
         self.sf = simple_salesforce.Salesforce(**auth)
 
-    def _get_cases(self, start_time=None, end_time=None):
+    def _get_cases(self, start_date=None, end_date=None):
         clause = ''
         conditions = []
-        if start_time is not None:
-            conditions.append(f'LastModifiedDate >= {start_time.date().isoformat()}T00:00:00Z')
-        if end_time is not None:
-            conditions.append(f'LastModifiedDate < {end_time.date().isoformat()}T00:00:00Z')
+        if start_date is not None:
+            conditions.append(f'LastModifiedDate >= {start_date.isoformat()}T00:00:00Z')
+        if end_date is not None:
+            conditions.append(f'LastModifiedDate < {end_date.isoformat()}T00:00:00Z')
 
         for condition in conditions:
             if clause:
@@ -46,11 +46,11 @@ class SalesforceSource(Datasource):
                     case['CaseNumber']
             )
 
-    def get_initial_data(self):
-        return self._get_cases()
+    def get_initial_data(self, start_date):
+        return self._get_cases(start_date)
 
-    def get_update_data(self, start_time, end_time):
-        return self._get_cases(start_time, end_time)
+    def get_update_data(self, start_date, end_date):
+        return self._get_cases(start_date, end_date)
 
     def get_summary_prompt(self):
         return """Write a concise summary of the following:
