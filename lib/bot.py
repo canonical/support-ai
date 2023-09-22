@@ -23,7 +23,7 @@ class Bot:
         self.qa_chain = QAChain(config, llm, ds_querier)
 
     def run(self):
-        self.ds_updater.start_update()
+        self.ds_updater.initialize_data()
         while True:
             query = input(">")
             # transfer query to lower case

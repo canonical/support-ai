@@ -10,6 +10,10 @@ class Data:
 
 class Datasource(ABC):
     @abstractmethod
+    def get_initial_data(self):
+        return NotImplemented
+
+    @abstractmethod
     def get_update_data(self, start_time, end_time):
         return NotImplemented
 
