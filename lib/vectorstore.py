@@ -1,3 +1,4 @@
+import chromadb
 import os
 from langchain.vectorstores import Chroma
 from lib.const import META_DIR
@@ -18,9 +19,14 @@ class VectorStore:
                       embedding_function=self.llm.embeddings,
                       persist_directory=persist_dir)
 
+    def list_collections(self, ds_type):
+        persist_dir = os.path.join(VECTORDB_DIR, ds_type)
+        collections = chromadb.PersistentClient(path=persist_dir).list_collections()
+        return [collection.name for collection in collections]
+
     def update(self, ds_type, data):
         self.__get_vectorstore(ds_type, data.Collection) \
                 .add_texts([data.Document], [data.Metadata], [data.Id])
 
     def similarity_search(self, ds_type, collection, query):
-        return self.__get_vectorstore(ds_type, collection).similarity_search(query)
+        return self.__get_vectorstore(ds_type, collection).similarity_search_with_score(query)
