@@ -19,7 +19,7 @@ class Bot:
         datasources = ds_utils.get_datasources(config)
         ds_querier = DSQuerier(vector_store, datasources)
 
-        self.ds_updater = DSUpdater(vector_store, datasources)
+        self.ds_updater = DSUpdater(llm, vector_store, datasources)
         self.qa_chain = QAChain(config, llm, ds_querier)
 
     def run(self):
