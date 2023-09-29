@@ -94,9 +94,13 @@ class LLM:
 
     def __init__(self, config) -> None:
         # get default language model (LLM) config
+        if CONFIG_SETTING not in config:
+            raise ValueError(f'The configuration doesn\'t contain ' +
+                             f'{CONFIG_SETTING} section')
         if CONFIG_LLM not in config[CONFIG_SETTING]:
             raise ValueError(f'The configuration\'s {CONFIG_SETTING} ' +
                              f'section doesn\'t contain {CONFIG_LLM}')
+
         llm: str = config[CONFIG_SETTING][CONFIG_LLM]
         if llm not in config:
             raise ValueError(f'The configuration doesn\'t contain {llm} section')

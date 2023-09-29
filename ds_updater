@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import configparser
+import signal
+import sys
+import time
+from lib.const import CONFIG_PATH
+from lib.datasources.ds_updater import DSUpdater
+from lib.datasources.utils import get_datasources
+from lib.llm import LLM
+from lib.vectorstore import VectorStore
+
+
+if __name__ == '__main__':
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+
+    llm = LLM(config)
+    vector_store = VectorStore(llm)
+    datasources = get_datasources(config)
+    ds_updater = DSUpdater(llm, vector_store, datasources)
+
+    def signal_handler(*args):
+        ds_updater.cancel_update_thread()
+        sys.exit()
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
+    ds_updater.initialize_data()
+    ds_updater.start_update_thread()
+    while True:
+        time.sleep(30)

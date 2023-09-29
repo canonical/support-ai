@@ -5,9 +5,13 @@ from lib.const import CONFIG_QA_CHAIN_TYPE, CONFIG_SETTING
 
 class QAChain:
     def __init__(self, config, llm, ds_querier):
+        if CONFIG_SETTING not in config:
+            raise ValueError(f'The configuration doesn\'t contain ' +
+                             f'{CONFIG_SETTING} section')
         if CONFIG_QA_CHAIN_TYPE not in config[CONFIG_SETTING]:
             raise ValueError(f'The configuration\'s {CONFIG_SETTING} ' +
                              f'section doesn\'t contain {CONFIG_QA_CHAIN_TYPE}')
+
         self.chain_type = config[CONFIG_SETTING][CONFIG_QA_CHAIN_TYPE]
         self.llm = llm
         self.ds_querier = ds_querier

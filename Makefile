@@ -8,10 +8,9 @@ VENV_PIP = $(VENV_BIN)/pip
 COLLECTION_META = collection_metadata
 VECTORDB_DIR = vectordb
 
-run: activate
-	$(VENV_PYTHON) ai-bot
+all: prepare
 
-activate: requirements.txt
+prepare: requirements.txt
 	$(PYTHON) -m venv $(VENV)
 	$(VENV_PIP) install -r requirements.txt
 

@@ -1,3 +1,4 @@
+CONFIG_PATH = 'config'
 CONFIG_SETTING = 'setting'
 CONFIG_LLM = 'llm'
 CONFIG_PROMPT = 'prompt'
