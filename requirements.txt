@@ -6,5 +6,6 @@ openai
 pyyaml
 sentence-transformers
 simple_salesforce
+streamlit
 torch
 transformers
