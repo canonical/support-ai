@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import configparser
+from flask import Flask, request
+from lib.const import CONFIG_PATH
+from lib.datasources.ds_querier import DSQuerier
+from lib.datasources.utils import get_datasources
+from lib.llm import LLM
+from lib.qa_chain import QAChain
+from lib.vectorstore import VectorStore
+
+CONFIG_PATH = "config"
+app = Flask(__name__)
+
+@app.route('/salesforce', methods=['POST'])
+def sf_query():
+    query = request.values['query']
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+
+    llm = LLM(config)
+    vector_store = VectorStore(llm)
+    datasources = get_datasources(config)
+    ds_querier = DSQuerier(vector_store, datasources)
+
+    return QAChain(config, llm, ds_querier).ask(query)
+
+if __name__ == '__main__':
+    app.run(debug=True)

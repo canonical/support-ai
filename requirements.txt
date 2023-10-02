@@ -1,4 +1,5 @@
 chromadb
+flask
 langchain
 llama-cpp-python
 openai
