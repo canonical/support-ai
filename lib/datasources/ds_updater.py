@@ -43,10 +43,18 @@ class DSUpdater:
         with open(UPDATE_TIME, 'w+') as f:
             f.write(now.strftime(TIME_FORMAT))
 
+    def _replace_invalid_token_in_collection(self, collection):
+        return collection.replace(' ', '_')
+
     def _generate_symptoms(self, doc):
         prompt = PromptTemplate.from_template(SYMPTOM_PROMPT)
         query = prompt.format_prompt(context=doc)
         return self.llm.llm(query.to_string())
+
+    def _parse_data(self, data):
+        data.Collection = self._replace_invalid_token_in_collection(data.Collection)
+        data.Document = self._generate_symptoms(data.Document)
+        return data
 
     def _update_data(self):
         while True:
@@ -60,8 +68,7 @@ class DSUpdater:
             end_date = (datetime.now() + timedelta(1)).date()
             for ds_type, ds in self.datasources.items():
                 for data in ds.get_update_data(start_date, end_date):
-                    data.Document = self._generate_symptoms(data.Document)
-                    self.vector_store.update(ds_type, data)
+                    self.vector_store.update(ds_type, self._parse_data(data))
             self._save_next_update_date()
             self.update_cond.release()
         self.update_timer.cancel()
@@ -84,6 +91,5 @@ class DSUpdater:
         update_date = self._get_update_date()
         for ds_type, ds in self.datasources.items():
             for data in ds.get_initial_data(update_date):
-                data.Document = self._generate_symptoms(data.Document)
-                self.vector_store.update(ds_type, data)
+                self.vector_store.update(ds_type, self._parse_data(data))
         self._save_next_update_date()
