@@ -1,6 +1,7 @@
 from lib.const import CONFIG_SF
 
-SCORE_THRESHOLD = 100
+SCORE_THRESHOLD = 14000
+SIMILAR_DOCS_NUM = 3
 
 class DSQuerier:
     def __init__(self, vector_store, datasources):
@@ -25,7 +26,11 @@ class DSQuerier:
             docs_with_score += self.vector_store.similarity_search(ds_type, collection, query)
 
         docs_with_score.sort(key=lambda val: val[1])
-        for doc, score in docs_with_score:
-            if score >= SCORE_THRESHOLD:
+        below_score_thres_num = sum(1 if score <= SCORE_THRESHOLD else 0 
+                                    for _, score in docs_with_score)
+        docs_num = 1 if below_score_thres_num else SIMILAR_DOCS_NUM
+        for doc, _ in docs_with_score:
+            if docs_num == 0:
                 break
             yield (ds.get_summary_prompt(), ds.get_content(doc))
+            docs_num -= 1
