@@ -1,4 +1,4 @@
-from lib.const import CONFIG_SF
+from lib.const import CONFIG_SF, CONFIG_KB
 from lib.vectorstore import VectorStore
 
 SCORE_THRESHOLD = 14000

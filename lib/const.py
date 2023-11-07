@@ -8,9 +8,11 @@ CONFIG_EMBEDDINGS = 'embeddings'
 CONFIG_QA_CHAIN_TYPE = 'qa_chain_type'
 # Salesforce
 CONFIG_SF = 'salesforce'
-CONFIG_SF_USERNAME = 'username'
-CONFIG_SF_PASSWORD = 'password'
-CONFIG_SF_TOKEN = 'token'
+CONFIG_USERNAME = 'username'
+CONFIG_PASSWORD = 'password'
+CONFIG_TOKEN = 'token'
+# KnowledgeBase
+CONFIG_KB = 'knowledgebase'
 # LLM
 CONFIG_LLAMACPP = 'llamacpp'
 CONFIG_OPENAI = 'openai'

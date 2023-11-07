@@ -1,16 +1,12 @@
 import os
 import threading
 from datetime import datetime, timedelta
-from langchain.prompts import PromptTemplate
 from lib.const import META_DIR
 from lib.vectorstore import VectorStore
 
 UPDATE_TIME = META_DIR + 'update_time'
 TIME_FORMAT = '%m/%d/%Y'
 TIMER_INTERVAL = 24*60*60
-SYMPTOM_PROMPT = """Generate five symptoms of the following:
-    "{context}"
-    CONCISE SYMPTOMS:"""
 
 class RepeatTimer(threading.Timer):
     def run(self):
@@ -43,19 +39,6 @@ class DSUpdater:
         with open(UPDATE_TIME, 'w+') as f:
             f.write(now.strftime(TIME_FORMAT))
 
-    def _replace_invalid_token_in_collection(self, collection):
-        return collection.replace(' ', '_')
-
-    def _generate_symptoms(self, llm, doc):
-        prompt = PromptTemplate.from_template(SYMPTOM_PROMPT)
-        query = prompt.format_prompt(context=doc)
-        return llm(query.to_string())
-
-    def _parse_data(self, llm, data):
-        data.Collection = self._replace_invalid_token_in_collection(data.Collection)
-        data.Document = self._generate_symptoms(llm, data.Document)
-        return data
-
     def _update_data(self):
         while True:
             self.update_cond.acquire()
@@ -70,7 +53,7 @@ class DSUpdater:
                 for data in ds.get_update_data(start_date, end_date):
                     self.vector_store.update(ds_type,
                                              ds.model_manager.embeddings,
-                                             self._parse_data(ds.model_manager.llm, data))
+                                             data)
             self._save_next_update_date()
             self.update_cond.release()
         self.update_timer.cancel()
@@ -95,5 +78,5 @@ class DSUpdater:
             for data in ds.get_initial_data(update_date):
                 self.vector_store.update(ds_type,
                                          ds.model_manager.embeddings,
-                                         self._parse_data(ds.model_manager.llm, data))
+                                         data)
         self._save_next_update_date()

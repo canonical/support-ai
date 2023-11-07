@@ -23,8 +23,6 @@ class QAChain:
             qa_chain = load_qa_chain(llm=self.__get_llm(ds_type),
                                      chain_type=self.chain_type,
                                      prompt=prompt_tmpl)
-            docs = []
-            for data in content:
-                docs.append(Document(page_content=data))
+            docs = [Document(page_content=content)]
             result = qa_chain({'input_documents': docs}, return_only_outputs=True)
             print(result['output_text'])

@@ -1,8 +1,10 @@
-from lib.const import CONFIG_DATASOURCES, CONFIG_TYPE, CONFIG_SF
+from lib.const import CONFIG_DATASOURCES, CONFIG_TYPE, CONFIG_SF, CONFIG_KB
+from lib.datasources.kb import KnowledgeBaseSource
 from lib.datasources.salesforce import SalesforceSource
 
 _ds_mapping: dict = {
-    CONFIG_SF: SalesforceSource
+    CONFIG_SF: SalesforceSource,
+    CONFIG_KB: KnowledgeBaseSource,
 }
 
 def get_datasources(config):
