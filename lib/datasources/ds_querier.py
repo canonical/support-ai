@@ -24,7 +24,9 @@ class DSQuerier:
         docs_with_score = []
 
         for collection in collections:
-            docs_with_score += self.vector_store.similarity_search(ds_type, ds.llm, collection, query)
+            docs_with_score += self.vector_store.similarity_search(ds_type,
+                                                                   ds.model_manager.embeddings,
+                                                                   collection, query)
 
         docs_with_score.sort(key=lambda val: val[1])
         below_score_thres_num = sum(1 if score <= SCORE_THRESHOLD else 0 

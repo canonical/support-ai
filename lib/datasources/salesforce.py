@@ -1,8 +1,8 @@
 import simple_salesforce
-from lib.const import CONFIG_AUTHENTICATION, CONFIG_LLM, \
+from lib.const import CONFIG_AUTHENTICATION, CONFIG_LLM, CONFIG_EMBEDDINGS, \
         CONFIG_SF_PASSWORD, CONFIG_SF_USERNAME, CONFIG_SF_TOKEN
 from lib.datasources.ds import Data, Datasource
-from lib.llm import LLM
+from lib.model_manager import ModelManager
 
 
 def get_authentication(auth_config):
@@ -24,9 +24,11 @@ class SalesforceSource(Datasource):
             raise ValueError(f'The config doesn\'t contain {CONFIG_AUTHENTICATION}')
         if CONFIG_LLM not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_LLM}')
+        if CONFIG_EMBEDDINGS not in config:
+            raise ValueError(f'The config doesn\'t contain {CONFIG_EMBEDDINGS}')
         auth = get_authentication(config[CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
-        self.llm = LLM(config[CONFIG_LLM])
+        self.model_manager = ModelManager(config[CONFIG_LLM], config[CONFIG_EMBEDDINGS])
 
     def _get_cases(self, start_date=None, end_date=None):
         clause = ''

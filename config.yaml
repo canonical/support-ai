@@ -6,12 +6,15 @@
 #   api_key
 
 datasources:
-  - type: salesforce:
+  - type: salesforce
     authentication:
       username: ""
       password: ""
       token: ""
     llm:
+      type: huggingface_pipeline
+      model: databricks/dolly-v2-12b
+    embeddings:
       type: huggingface_pipeline
       model: databricks/dolly-v2-12b
 qa_chain_type: stuff

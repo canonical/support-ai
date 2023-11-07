@@ -15,12 +15,12 @@ class QAChain:
     def __get_llm(self, ds_type):
         if ds_type not in self.datasources:
             raise ValueError(f'Unknown datasource type: {ds_type}')
-        return self.datasources[ds_type].llm
+        return self.datasources[ds_type].model_manager.llm
 
     def ask(self, query):
         for ds_type, prompt, content in self.ds_querier.query(query):
             prompt_tmpl = PromptTemplate.from_template(prompt)
-            qa_chain = load_qa_chain(llm=self.__get_llm(ds_type).llm,
+            qa_chain = load_qa_chain(llm=self.__get_llm(ds_type),
                                      chain_type=self.chain_type,
                                      prompt=prompt_tmpl)
             docs = []

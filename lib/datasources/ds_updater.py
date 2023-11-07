@@ -49,7 +49,7 @@ class DSUpdater:
     def _generate_symptoms(self, llm, doc):
         prompt = PromptTemplate.from_template(SYMPTOM_PROMPT)
         query = prompt.format_prompt(context=doc)
-        return llm.llm(query.to_string())
+        return llm(query.to_string())
 
     def _parse_data(self, llm, data):
         data.Collection = self._replace_invalid_token_in_collection(data.Collection)
@@ -68,8 +68,9 @@ class DSUpdater:
             end_date = (datetime.now() + timedelta(1)).date()
             for ds_type, ds in self.datasources.items():
                 for data in ds.get_update_data(start_date, end_date):
-                    self.vector_store.update(ds_type, ds.llm,
-                                             self._parse_data(ds.llm, data))
+                    self.vector_store.update(ds_type,
+                                             ds.model_manager.embeddings,
+                                             self._parse_data(ds.model_manager.llm, data))
             self._save_next_update_date()
             self.update_cond.release()
         self.update_timer.cancel()
@@ -92,6 +93,7 @@ class DSUpdater:
         update_date = self._get_update_date()
         for ds_type, ds in self.datasources.items():
             for data in ds.get_initial_data(update_date):
-                self.vector_store.update(ds_type, ds.llm,
-                                         self._parse_data(ds.llm, data))
+                self.vector_store.update(ds_type,
+                                         ds.model_manager.embeddings,
+                                         self._parse_data(ds.model_manager.llm, data))
         self._save_next_update_date()
