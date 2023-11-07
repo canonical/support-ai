@@ -1,11 +1,12 @@
 from lib.const import CONFIG_SF
+from lib.vectorstore import VectorStore
 
 SCORE_THRESHOLD = 14000
 SIMILAR_DOCS_NUM = 3
 
 class DSQuerier:
-    def __init__(self, vector_store, datasources):
-        self.vector_store = vector_store
+    def __init__(self, datasources):
+        self.vector_store = VectorStore()
         self.datasources = datasources
 
     def __judge_ds_type(self, query):
@@ -13,7 +14,7 @@ class DSQuerier:
 
     def __get_ds(self, ds_type):
         if ds_type not in self.datasources:
-            raise ValueError(f'Unknown datasource: {ds_type}')
+            raise ValueError(f'Unknown datasource type: {ds_type}')
         return self.datasources[ds_type]
 
     def query(self, query):
@@ -23,7 +24,7 @@ class DSQuerier:
         docs_with_score = []
 
         for collection in collections:
-            docs_with_score += self.vector_store.similarity_search(ds_type, collection, query)
+            docs_with_score += self.vector_store.similarity_search(ds_type, ds.llm, collection, query)
 
         docs_with_score.sort(key=lambda val: val[1])
         below_score_thres_num = sum(1 if score <= SCORE_THRESHOLD else 0 
@@ -32,5 +33,5 @@ class DSQuerier:
         for doc, _ in docs_with_score:
             if docs_num == 0:
                 break
-            yield (ds.get_summary_prompt(), ds.get_content(doc))
+            yield (ds_type, ds.get_summary_prompt(), ds.get_content(doc))
             docs_num -= 1

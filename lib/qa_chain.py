@@ -1,25 +1,27 @@
 from langchain.chains.question_answering import load_qa_chain
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
-from lib.const import CONFIG_QA_CHAIN_TYPE, CONFIG_SETTING
+from lib.const import CONFIG_QA_CHAIN_TYPE
+from lib.datasources.ds_querier import DSQuerier
 
 class QAChain:
-    def __init__(self, config, llm, ds_querier):
-        if CONFIG_SETTING not in config:
-            raise ValueError(f'The configuration doesn\'t contain ' +
-                             f'{CONFIG_SETTING} section')
-        if CONFIG_QA_CHAIN_TYPE not in config[CONFIG_SETTING]:
-            raise ValueError(f'The configuration\'s {CONFIG_SETTING} ' +
-                             f'section doesn\'t contain {CONFIG_QA_CHAIN_TYPE}')
+    def __init__(self, config, datasources):
+        if CONFIG_QA_CHAIN_TYPE not in config:
+            raise ValueError(f'The config doesn\'t contain {CONFIG_QA_CHAIN_TYPE}')
+        self.chain_type = config[CONFIG_QA_CHAIN_TYPE]
+        self.datasources = datasources
+        self.ds_querier = DSQuerier(datasources)
 
-        self.chain_type = config[CONFIG_SETTING][CONFIG_QA_CHAIN_TYPE]
-        self.llm = llm
-        self.ds_querier = ds_querier
+    def __get_llm(self, ds_type):
+        if ds_type not in self.datasources:
+            raise ValueError(f'Unknown datasource type: {ds_type}')
+        return self.datasources[ds_type].llm
 
     def ask(self, query):
-        for prompt, content in self.ds_querier.query(query):
+        for ds_type, prompt, content in self.ds_querier.query(query):
             prompt_tmpl = PromptTemplate.from_template(prompt)
-            qa_chain = load_qa_chain(llm=self.llm.llm, chain_type=self.chain_type,
+            qa_chain = load_qa_chain(llm=self.__get_llm(ds_type).llm,
+                                     chain_type=self.chain_type,
                                      prompt=prompt_tmpl)
             docs = []
             for data in content:

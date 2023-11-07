@@ -1,23 +1,15 @@
 #!/usr/bin/env python
 
-import configparser
+import yaml
 from lib.const import CONFIG_PATH
-from lib.datasources.ds_querier import DSQuerier
 from lib.datasources.utils import get_datasources
-from lib.llm import LLM
 from lib.qa_chain import QAChain
-from lib.vectorstore import VectorStore
 
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read(CONFIG_PATH)
-
-    llm = LLM(config)
-    vector_store = VectorStore(llm)
-    datasources = get_datasources(config)
-    ds_querier = DSQuerier(vector_store, datasources)
-    qa_chain = QAChain(config, llm, ds_querier)
+    with open(CONFIG_PATH, 'r', encoding='utf8') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    qa_chain = QAChain(config, get_datasources(config))
 
     while True:
         query = input(">")

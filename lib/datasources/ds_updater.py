@@ -3,6 +3,7 @@ import threading
 from datetime import datetime, timedelta
 from langchain.prompts import PromptTemplate
 from lib.const import META_DIR
+from lib.vectorstore import VectorStore
 
 UPDATE_TIME = META_DIR + 'update_time'
 TIME_FORMAT = '%m/%d/%Y'
@@ -17,9 +18,8 @@ class RepeatTimer(threading.Timer):
             self.function(*self.args, **self.kwargs)
 
 class DSUpdater:
-    def __init__(self, llm, vector_store, datasources):
-        self.llm = llm
-        self.vector_store = vector_store
+    def __init__(self, datasources):
+        self.vector_store = VectorStore()
         self.datasources = datasources
         self.update_timer = RepeatTimer(TIMER_INTERVAL, self._trigger_update)
         self.update_thread = threading.Thread(target=self._update_data)
@@ -46,14 +46,14 @@ class DSUpdater:
     def _replace_invalid_token_in_collection(self, collection):
         return collection.replace(' ', '_')
 
-    def _generate_symptoms(self, doc):
+    def _generate_symptoms(self, llm, doc):
         prompt = PromptTemplate.from_template(SYMPTOM_PROMPT)
         query = prompt.format_prompt(context=doc)
-        return self.llm.llm(query.to_string())
+        return llm.llm(query.to_string())
 
-    def _parse_data(self, data):
+    def _parse_data(self, llm, data):
         data.Collection = self._replace_invalid_token_in_collection(data.Collection)
-        data.Document = self._generate_symptoms(data.Document)
+        data.Document = self._generate_symptoms(llm, data.Document)
         return data
 
     def _update_data(self):
@@ -68,7 +68,8 @@ class DSUpdater:
             end_date = (datetime.now() + timedelta(1)).date()
             for ds_type, ds in self.datasources.items():
                 for data in ds.get_update_data(start_date, end_date):
-                    self.vector_store.update(ds_type, self._parse_data(data))
+                    self.vector_store.update(ds_type, ds.llm,
+                                             self._parse_data(ds.llm, data))
             self._save_next_update_date()
             self.update_cond.release()
         self.update_timer.cancel()
@@ -91,5 +92,6 @@ class DSUpdater:
         update_date = self._get_update_date()
         for ds_type, ds in self.datasources.items():
             for data in ds.get_initial_data(update_date):
-                self.vector_store.update(ds_type, self._parse_data(data))
+                self.vector_store.update(ds_type, ds.llm,
+                                         self._parse_data(ds.llm, data))
         self._save_next_update_date()
