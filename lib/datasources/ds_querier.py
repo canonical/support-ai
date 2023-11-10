@@ -17,8 +17,9 @@ class DSQuerier:
             raise ValueError(f'Unknown datasource type: {ds_type}')
         return self.datasources[ds_type]
 
-    def query(self, query):
-        ds_type = self.__judge_ds_type(query)
+    def query(self, query, ds_type=None):
+        if ds_type is None:
+            ds_type = self.__judge_ds_type(query)
         ds = self.__get_ds(ds_type)
         collections = self.vector_store.list_collections(ds_type)
         docs_with_score = []

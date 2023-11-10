@@ -8,13 +8,22 @@ from lib.qa_chain import QAChain
 
 app = Flask(__name__)
 
-@app.route('/salesforce', methods=['POST'])
-def sf_query():
+@app.route('/ask_ai', methods=['POST'])
+def ask_ai():
     with open(CONFIG_PATH, 'r', encoding='utf8') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    query = request.values['query']
+    query = request.form.get('query')
+    datasource = request.form.get('datasource')
 
-    return QAChain(config, get_datasources(config)).ask(query)
+    if query is None:
+        return 'Query not specified', 400
+    try:
+        content = QAChain(config, get_datasources(config)).ask(query, datasource)
+    except ValueError:
+        return 'Service unavailable', 400
+    if not content:
+        return 'Response unavailable', 500
+    return content, 200
 
 if __name__ == '__main__':
     app.run(debug=True)

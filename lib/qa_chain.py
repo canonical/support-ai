@@ -28,6 +28,13 @@ class QAChain:
         result = qa_chain({'input_documents': docs}, return_only_outputs=True)
         return result['output_text']
 
-    def ask(self, query):
-        for ds_type, prompt, content in self.ds_querier.query(query):
-            print(self.__get_output(ds_type, prompt, content))
+    def ask(self, query, ds_type=None):
+        resp = ''
+        for ds_type, prompt, content in self.ds_querier.query(query, ds_type):
+            output = self.__get_output(ds_type, prompt, content)
+            if not output:
+                continue
+            if resp:
+                resp += '\n'
+            resp += output
+        return resp
