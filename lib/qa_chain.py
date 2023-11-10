@@ -3,6 +3,7 @@ from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from lib.const import CONFIG_QA_CHAIN_TYPE
 from lib.datasources.ds_querier import DSQuerier
+from lib.lru import timed_lru_cache
 
 class QAChain:
     def __init__(self, config, datasources):
@@ -17,12 +18,16 @@ class QAChain:
             raise ValueError(f'Unknown datasource type: {ds_type}')
         return self.datasources[ds_type].model_manager.llm
 
+    @timed_lru_cache()
+    def __get_output(self, ds_type, prompt, content):
+        prompt_tmpl = PromptTemplate.from_template(prompt)
+        qa_chain = load_qa_chain(llm=self.__get_llm(ds_type),
+                                 chain_type=self.chain_type,
+                                 prompt=prompt_tmpl)
+        docs = [Document(page_content=content)]
+        result = qa_chain({'input_documents': docs}, return_only_outputs=True)
+        return result['output_text']
+
     def ask(self, query):
         for ds_type, prompt, content in self.ds_querier.query(query):
-            prompt_tmpl = PromptTemplate.from_template(prompt)
-            qa_chain = load_qa_chain(llm=self.__get_llm(ds_type),
-                                     chain_type=self.chain_type,
-                                     prompt=prompt_tmpl)
-            docs = [Document(page_content=content)]
-            result = qa_chain({'input_documents': docs}, return_only_outputs=True)
-            print(result['output_text'])
+            print(self.__get_output(ds_type, prompt, content))
