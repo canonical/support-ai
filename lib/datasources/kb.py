@@ -1,17 +1,21 @@
+from lib.datasources.salesforce import SUMMARY_PROMPT
 import simple_salesforce
 from html.parser import HTMLParser
 from io import StringIO
 from langchain.prompts import PromptTemplate
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.datasources.ds import Data, Datasource
+from lib.datasources.ds import Data, Datasource, RawContent
 from lib.model_manager import ModelManager
 
 
 DEFAULT_COLLECTION = 'default'
-PROMPT = """Generate five questions that can be answered by the article with the summary:
+QUESTIONS_PROMPT = """Generate five questions that can be answered by the article with the summary:
     "{context}"
     QUESTIONS:"""
+SUMMARY_PROMPT = """Write a concise summary of the following:
+    "{context}"
+    CONCISE SUMMARY:"""
 
 class HtmlTagStripper(HTMLParser):
     def __init__(self):
@@ -54,7 +58,7 @@ class KnowledgeBaseSource(Datasource):
         self.model_manager = ModelManager(config)
 
     def __generate_qeustions(self, summary):
-        prompt = PromptTemplate.from_template(PROMPT)
+        prompt = PromptTemplate.from_template(QUESTIONS_PROMPT)
         query = prompt.format_prompt(context=summary)
         return self.model_manager.llm(query.to_string())
 
@@ -90,12 +94,14 @@ class KnowledgeBaseSource(Datasource):
     def get_update_data(self, start_date, end_date):
         return self.__get_articles(start_date, end_date)
 
-    def get_summary_prompt(self):
-        return """Write a concise summary of the following:
-            "{context}"
-            CONCISE SUMMARY:"""
-
-    def get_content(self, doc):
+    def get_raw_content(self, doc):
         article = self.sf.query_all(f'SELECT Knowledge_1_Solution__c FROM Knowledge__kav '
                                     f'WHERE KnowledgeArticleId = \'{doc.metadata["article_id"]}\'')
-        return strip_tags(article['records'][0]['Knowledge_1_Solution__c'])
+        return RawContent(
+                SUMMARY_PROMPT,
+                {},
+                strip_tags(article['records'][0]['Knowledge_1_Solution__c'])
+                )
+
+    def generate_content(self, raw_content):
+        return raw_content.Body

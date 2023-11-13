@@ -13,28 +13,33 @@ class QAChain:
         self.datasources = datasources
         self.ds_querier = DSQuerier(datasources)
 
-    def __get_llm(self, ds_type):
+    def __get_ds(self, ds_type):
         if ds_type not in self.datasources:
             raise ValueError(f'Unknown datasource type: {ds_type}')
-        return self.datasources[ds_type].model_manager.llm
+        return self.datasources[ds_type]
 
     @timed_lru_cache()
-    def __get_output(self, ds_type, prompt, content):
+    def __parse_body(self, ds, prompt, body):
+        if not prompt:
+            return body
+
         prompt_tmpl = PromptTemplate.from_template(prompt)
-        qa_chain = load_qa_chain(llm=self.__get_llm(ds_type),
+        qa_chain = load_qa_chain(llm=ds.model_manager.llm,
                                  chain_type=self.chain_type,
                                  prompt=prompt_tmpl)
-        docs = [Document(page_content=content)]
+        docs = [Document(page_content=body)]
         result = qa_chain({'input_documents': docs}, return_only_outputs=True)
         return result['output_text']
 
     def ask(self, query, ds_type=None):
         resp = ''
-        for ds_type, prompt, content in self.ds_querier.query(query, ds_type):
-            output = self.__get_output(ds_type, prompt, content)
-            if not output:
+        for _ds_type, raw_content in self.ds_querier.query(query, ds_type):
+            ds = self.__get_ds(_ds_type)
+            raw_content.Body = self.__parse_body(ds, raw_content.Prompt, raw_content.Body)
+            content = ds.generate_content(raw_content)
+            if not content:
                 continue
             if resp:
-                resp += '\n'
-            resp += output
+                resp += '>>>>>>\n'
+            resp += content
         return resp
