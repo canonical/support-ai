@@ -3,13 +3,13 @@
 import yaml
 from lib.const import CONFIG_PATH
 from lib.datasources.utils import get_datasources
-from lib.qa_chain import QAChain
+from lib.chain import Chain
 
 
 if __name__ == '__main__':
     with open(CONFIG_PATH, 'r', encoding='utf8') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    qa_chain = QAChain(config, get_datasources(config))
+    chain = Chain(get_datasources(config))
 
     while True:
         query = input(">")
@@ -19,4 +19,4 @@ if __name__ == '__main__':
             break
         if not query:
             continue
-        print(qa_chain.ask(query))
+        print(chain.ask(query))

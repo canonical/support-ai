@@ -1,9 +1,8 @@
 # [llm]
-# type: llamacpp/openai/huggingface_pipeline
-# model
-# qa_chain_type: stuff/map_reduce/map_rerank/refine
-# {openai}
-#   api_key
+#   type: llamacpp/openai/huggingface_pipeline
+#   model
+#   {openai}
+#     api_key
 
 datasources:
   - type: salesforce
@@ -28,4 +27,3 @@ datasources:
     embeddings:
       type: huggingface_pipeline
       model: databricks/dolly-v2-12b
-qa_chain_type: stuff

@@ -4,7 +4,7 @@ import yaml
 from flask import Flask, request
 from lib.const import CONFIG_PATH
 from lib.datasources.utils import get_datasources
-from lib.qa_chain import QAChain
+from lib.chain import Chain
 
 app = Flask(__name__)
 
@@ -18,7 +18,7 @@ def ask_ai():
     if query is None:
         return 'Query not specified', 400
     try:
-        content = QAChain(config, get_datasources(config)).ask(query, datasource)
+        content = Chain(get_datasources(config)).ask(query, datasource)
     except ValueError:
         return 'Service unavailable', 400
     if not content:

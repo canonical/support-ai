@@ -5,7 +5,6 @@ CONFIG_AUTHENTICATION = 'authentication'
 CONFIG_LLM = 'llm'
 CONFIG_MODEL = 'model'
 CONFIG_EMBEDDINGS = 'embeddings'
-CONFIG_QA_CHAIN_TYPE = 'qa_chain_type'
 # Salesforce
 CONFIG_SF = 'salesforce'
 CONFIG_USERNAME = 'username'

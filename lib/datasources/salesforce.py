@@ -1,16 +1,19 @@
 import simple_salesforce
 from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.datasources.ds import Data, Datasource, RawContent
+from lib.datasources.ds import Data, Datasource
+from lib.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
 SYMPTOMS_PROMPT = """Generate five symptoms of the following:
-    "{context}"
+    "{desc}"
     SYMPTOMS:"""
 SUMMARY_PROMPT = """Write a concise summary of the following:
-    "{context}"
+    "{comments}"
     CONCISE SUMMARY:"""
 
 def get_authentication(auth_config):
@@ -39,8 +42,13 @@ class SalesforceSource(Datasource):
 
     def __generate_symptoms(self, desc):
         prompt = PromptTemplate.from_template(SYMPTOMS_PROMPT)
-        query = prompt.format_prompt(context=desc)
-        return self.model_manager.llm(query.to_string())
+        chain = (
+                {'desc': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        return chain.invoke(desc)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
@@ -73,16 +81,21 @@ class SalesforceSource(Datasource):
     def get_update_data(self, start_date, end_date):
         return self.__get_cases(start_date, end_date)
 
-    def get_raw_content(self, doc):
+    @timed_lru_cache()
+    def __get_summary(self, comments):
+        prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
+        chain = (
+                {'comments': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        return chain.invoke(comments)
+
+    def get_content(self, doc):
         cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
                                  f'WHERE Id = \'{doc.metadata["id"]}\'')
         case = cases['records'][0]
-        metadata = {
-                'status': case['Status'],
-                'bug_url': case['Public_Bug_URL__c'],
-                'sev_lv': case['Sev_Lvl__c'],
-                'case_number': case['CaseNumber']
-                }
 
         comments = self.sf.query_all(f'SELECT CommentBody FROM CaseComment ' 
                                      f'WHERE ParentId = \'{doc.metadata["id"]}\' '
@@ -92,11 +105,10 @@ class SalesforceSource(Datasource):
             if body:
                 body += '\n'
             body += comment['CommentBody']
-        return RawContent(SYMPTOMS_PROMPT, metadata, body)
+        summary = self.__get_summary(body)
 
-    def generate_content(self, raw_content):
-        return f'Case:\t\t{raw_content.Metadata["case_number"]}\n' \
-                f'Status:\t\t{raw_content.Metadata["status"]}\n' \
-                f'Severity Level:\t{raw_content.Metadata["sev_lv"]}\n' \
-                f'Bug URL:\t{raw_content.Metadata["bug_url"]}\n' \
-                f'Summary:\n{raw_content.Body}\n'
+        return f'Case:\t\t{case["CaseNumber"]}\n' \
+                f'Status:\t\t{case["Status"]}\n' \
+                f'Severity Level:\t{case["Sev_Lvl__c"]}\n' \
+                f'Bug URL:\t{case["Public_Bug_URL__c"]}\n' \
+                f'Summary:\n{summary}\n'

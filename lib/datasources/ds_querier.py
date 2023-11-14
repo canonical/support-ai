@@ -36,5 +36,5 @@ class DSQuerier:
         for doc, _ in docs_with_score:
             if docs_num == 0:
                 break
-            yield (ds_type, ds.get_raw_content(doc))
+            yield ds.get_content(doc)
             docs_num -= 1

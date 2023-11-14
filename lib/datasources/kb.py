@@ -1,20 +1,22 @@
-from lib.datasources.salesforce import SUMMARY_PROMPT
 import simple_salesforce
 from html.parser import HTMLParser
 from io import StringIO
 from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.datasources.ds import Data, Datasource, RawContent
+from lib.datasources.ds import Data, Datasource
+from lib.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
 DEFAULT_COLLECTION = 'default'
 QUESTIONS_PROMPT = """Generate five questions that can be answered by the article with the summary:
-    "{context}"
+    "{summary}"
     QUESTIONS:"""
 SUMMARY_PROMPT = """Write a concise summary of the following:
-    "{context}"
+    "{solution}"
     CONCISE SUMMARY:"""
 
 class HtmlTagStripper(HTMLParser):
@@ -59,8 +61,13 @@ class KnowledgeBaseSource(Datasource):
 
     def __generate_qeustions(self, summary):
         prompt = PromptTemplate.from_template(QUESTIONS_PROMPT)
-        query = prompt.format_prompt(context=summary)
-        return self.model_manager.llm(query.to_string())
+        chain = (
+                {'summary': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        return chain.invode(summary)
 
     def __get_articles(self, start_date=None, end_date=None):
         clause = ''
@@ -94,14 +101,18 @@ class KnowledgeBaseSource(Datasource):
     def get_update_data(self, start_date, end_date):
         return self.__get_articles(start_date, end_date)
 
-    def get_raw_content(self, doc):
+    @timed_lru_cache()
+    def __get_summary(self, solution):
+        prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
+        chain = (
+                {'solution': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        return chain.invoke(solution)
+
+    def get_content(self, doc):
         article = self.sf.query_all(f'SELECT Knowledge_1_Solution__c FROM Knowledge__kav '
                                     f'WHERE KnowledgeArticleId = \'{doc.metadata["article_id"]}\'')
-        return RawContent(
-                SUMMARY_PROMPT,
-                {},
-                strip_tags(article['records'][0]['Knowledge_1_Solution__c'])
-                )
-
-    def generate_content(self, raw_content):
-        return raw_content.Body
+        return self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
