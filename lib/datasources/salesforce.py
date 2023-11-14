@@ -63,13 +63,12 @@ class SalesforceSource(Datasource):
                 clause += ' AND '
             clause += condition
 
-        sql_cmd = 'SELECT Id, CaseNumber, Subject, Description, Case_Categories_2016__c ' + \
+        sql_cmd = 'SELECT Id, CaseNumber, Subject, Description ' + \
                 'FROM Case' + (f' WHERE {clause}' if clause else '')
         cases = self.sf.query_all(sql_cmd)
 
         for case in cases['records']:
             yield Data(
-                    self.__parse_collection(case['Case_Categories_2016__c'].lower()),
                     self.__generate_symptoms(case['Description']),
                     {'id': case['Id'], 'subject': case['Subject']},
                     case['CaseNumber']

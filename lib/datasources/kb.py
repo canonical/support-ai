@@ -11,7 +11,6 @@ from lib.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
-DEFAULT_COLLECTION = 'default'
 QUESTIONS_PROMPT = """Generate five questions that can be answered by the article with the summary:
     "{summary}"
     QUESTIONS:"""
@@ -89,7 +88,6 @@ class KnowledgeBaseSource(Datasource):
 
         for article in articles['records']:
             yield Data(
-                    DEFAULT_COLLECTION,
                     self.__generate_qeustions(article['Summary']),
                     {'article_id': article['KnowledgeArticleId'], 'title': article['Title']},
                     article['Id']

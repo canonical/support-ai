@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class Data:
-    Collection: str
     Document: str
     Metadata: dict
     Id: str
