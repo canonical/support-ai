@@ -4,6 +4,10 @@
 #   {openai}
 #     api_key
 
+classification:
+  llm:
+    type: huggingface_pipeline
+    model: databricks/dolly-v2-12b
 datasources:
   - type: salesforce
     authentication:

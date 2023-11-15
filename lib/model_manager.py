@@ -72,24 +72,25 @@ class ModelManager:
     def __init__(self, config) -> None:
         if CONFIG_LLM not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_LLM}')
-        if CONFIG_EMBEDDINGS not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_EMBEDDINGS}')
         llm_config = config[CONFIG_LLM]
-        embeddings_config = config[CONFIG_EMBEDDINGS]
         if CONFIG_TYPE not in llm_config:
             raise ValueError(f'The llm configuration doesn\'t contain {CONFIG_TYPE}')
         if CONFIG_MODEL not in llm_config:
             raise ValueError(f'The llm configuration doesn\'t contain {CONFIG_MODEL}')
-        if CONFIG_TYPE not in embeddings_config:
-            raise ValueError(f'The embeddings configuration doesn\'t contain {CONFIG_TYPE}')
-        if CONFIG_MODEL not in embeddings_config:
-            raise ValueError(f'The embeddings configuration doesn\'t contain {CONFIG_MODEL}')
         llm_type = llm_config[CONFIG_TYPE]
         if llm_type not in _factories:
             raise ValueError(f'Unknown llm type: {llm_type}')
-        embeddings_type = embeddings_config[CONFIG_TYPE]
-        if embeddings_type not in _factories:
-            raise ValueError(f'Unknown embeddings type: {embeddings_type}')
-
         self.llm = _factories[llm_type](llm_config).create_llm()
-        self.embeddings = _factories[embeddings_type](embeddings_config).create_embeddings()
+
+        if CONFIG_EMBEDDINGS not in config:
+            self.embeddings = None
+        else:
+            embeddings_config = config[CONFIG_EMBEDDINGS]
+            if CONFIG_TYPE not in embeddings_config:
+                raise ValueError(f'The embeddings configuration doesn\'t contain {CONFIG_TYPE}')
+            if CONFIG_MODEL not in embeddings_config:
+                raise ValueError(f'The embeddings configuration doesn\'t contain {CONFIG_MODEL}')
+            embeddings_type = embeddings_config[CONFIG_TYPE]
+            if embeddings_type not in _factories:
+                raise ValueError(f'Unknown embeddings type: {embeddings_type}')
+            self.embeddings = _factories[embeddings_type](embeddings_config).create_embeddings()

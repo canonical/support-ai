@@ -2,14 +2,13 @@
 
 import yaml
 from lib.const import CONFIG_PATH
-from lib.datasources.utils import get_datasources
 from lib.chain import Chain
 
 
 if __name__ == '__main__':
     with open(CONFIG_PATH, 'r', encoding='utf8') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    chain = Chain(get_datasources(config))
+    chain = Chain(config)
 
     while True:
         query = input(">")

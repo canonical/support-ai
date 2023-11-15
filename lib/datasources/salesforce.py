@@ -37,9 +37,6 @@ class SalesforceSource(Datasource):
         self.sf = simple_salesforce.Salesforce(**auth)
         self.model_manager = ModelManager(config)
 
-    def __parse_collection(self, collection):
-        return collection.replace(' ', '_')
-
     def __generate_symptoms(self, desc):
         prompt = PromptTemplate.from_template(SYMPTOMS_PROMPT)
         chain = (

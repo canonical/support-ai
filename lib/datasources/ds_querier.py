@@ -1,14 +1,45 @@
-from lib.const import CONFIG_SF, CONFIG_KB
+from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.runnable import RunnablePassthrough
+from lib.const import CONFIG_CLASSIFICATION, CONFIG_SF, CONFIG_KB
+from lib.datasources.utils import get_datasources
+from lib.model_manager import ModelManager
 from lib.vectorstore import VectorStore
 
 
+CLASSIFICATION_PROMPT = """Classify the question into salesforce or knowledgebase.
+
+Example:
+	Question: Some issues happened, is there similar discussions?
+	Answer: salesforce
+	Question: Give me operational steps to resolve certain issue
+	Answer: knowledgebase
+
+Do not respond with the answer other than salesforce, knowledgebase.
+
+Question: {query}
+Answer:"""
+
 class DSQuerier:
-    def __init__(self, datasources):
+    def __init__(self, config):
+        if CONFIG_CLASSIFICATION not in config:
+            raise ValueError(f'The config doesn\'t contain {CONFIG_CLASSIFICATION}')
+        self.model_manager = ModelManager(config[CONFIG_CLASSIFICATION])
+        self.datasources = get_datasources(config)
         self.vector_store = VectorStore()
-        self.datasources = datasources
 
     def __judge_ds_type(self, query):
-        return CONFIG_SF
+        prompt = PromptTemplate.from_template(CLASSIFICATION_PROMPT)
+        chain = (
+                {'query': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        ds_type = chain.invoke(query)
+        if ds_type not in {CONFIG_SF, CONFIG_KB}:
+            return CONFIG_SF
+        return ds_type
 
     def __get_ds(self, ds_type):
         if ds_type not in self.datasources:
