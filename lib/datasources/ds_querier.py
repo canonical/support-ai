@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
-from lib.const import CONFIG_BASIC_MODEL, CONFIG_SF, CONFIG_KB
+from lib.const import CONFIG_BASIC_MODEL, CONFIG_SF
 from lib.datasources.utils import get_datasources
 from lib.model_manager import ModelManager
 from lib.vectorstore import VectorStore
@@ -37,7 +37,7 @@ class DSQuerier:
                 | StrOutputParser()
                 )
         ds_type = chain.invoke(query)
-        if ds_type not in {CONFIG_SF, CONFIG_KB}:
+        if ds_type not in self.datasources:
             return CONFIG_SF
         return ds_type
 
