@@ -4,7 +4,7 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.datasources.ds import Data, Datasource
+from lib.datasources.ds import Data, Content, Datasource
 from lib.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
@@ -92,6 +92,12 @@ class SalesforceSource(Datasource):
         cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
                                  f'WHERE Id = \'{doc.metadata["id"]}\'')
         case = cases['records'][0]
+        metadata = {
+                'case_number': case['CaseNumber'],
+                'status': case['Status'],
+                'sev_lv': case['Sev_Lvl__c'],
+                'bug_url': case['Public_Bug_URL__c']
+                }
 
         comments = self.sf.query_all(f'SELECT CommentBody FROM CaseComment ' 
                                      f'WHERE ParentId = \'{doc.metadata["id"]}\' '
@@ -101,10 +107,14 @@ class SalesforceSource(Datasource):
             if body:
                 body += '\n'
             body += comment['CommentBody']
-        summary = self.__get_summary(body)
+        return Content(
+                metadata,
+                self.__get_summary(body)
+                )
 
-        return f'Case:\t\t{case["CaseNumber"]}\n' \
-                f'Status:\t\t{case["Status"]}\n' \
-                f'Severity Level:\t{case["Sev_Lvl__c"]}\n' \
-                f'Bug URL:\t{case["Public_Bug_URL__c"]}\n' \
-                f'Summary:\n{summary}\n'
+    def generate_output(self, content):
+        return f'Case:\t\t{content.Metadata["case_number"]}\n' \
+                f'Status:\t\t{content.Metadata["status"]}\n' \
+                f'Severity Level:\t{content.Metadata["sev_lv"]}\n' \
+                f'Bug URL:\t{content.Metadata["bug_url"]}\n' \
+                f'Summary:\n{content.Summary}\n'

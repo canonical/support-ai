@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
-from lib.const import CONFIG_CLASSIFICATION, CONFIG_SF, CONFIG_KB
+from lib.const import CONFIG_BASIC_MODEL, CONFIG_SF, CONFIG_KB
 from lib.datasources.utils import get_datasources
 from lib.model_manager import ModelManager
 from lib.vectorstore import VectorStore
@@ -22,9 +22,9 @@ Answer:"""
 
 class DSQuerier:
     def __init__(self, config):
-        if CONFIG_CLASSIFICATION not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_CLASSIFICATION}')
-        self.model_manager = ModelManager(config[CONFIG_CLASSIFICATION])
+        if CONFIG_BASIC_MODEL not in config:
+            raise ValueError(f'The config doesn\'t contain {CONFIG_BASIC_MODEL}')
+        self.basic_model = ModelManager(config[CONFIG_BASIC_MODEL])
         self.datasources = get_datasources(config)
         self.vector_store = VectorStore()
 
@@ -33,7 +33,7 @@ class DSQuerier:
         chain = (
                 {'query': RunnablePassthrough()}
                 | prompt
-                | self.model_manager.llm
+                | self.basic_model.llm
                 | StrOutputParser()
                 )
         ds_type = chain.invoke(query)
@@ -53,4 +53,4 @@ class DSQuerier:
         docs = self.vector_store.similarity_search(ds_type,
                                                   ds.model_manager.embeddings,
                                                   query)
-        return ds.get_content(docs[0])
+        return ds, docs[0]

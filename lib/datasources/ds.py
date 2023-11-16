@@ -7,6 +7,11 @@ class Data:
     Metadata: dict
     Id: str
 
+@dataclass
+class Content:
+    Metadata: dict
+    Summary: str
+
 class Datasource(ABC):
     @abstractmethod
     def get_initial_data(self, start_date):
@@ -18,4 +23,8 @@ class Datasource(ABC):
 
     @abstractmethod
     def get_content(self, doc):
+        return NotImplemented
+
+    @abstractmethod
+    def generate_output(self, content):
         return NotImplemented

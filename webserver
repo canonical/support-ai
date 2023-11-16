@@ -13,11 +13,12 @@ def ask_ai():
         config = yaml.load(f, Loader=yaml.FullLoader)
     query = request.form.get('query')
     datasource = request.form.get('datasource')
+    session = request.form.get('session')
 
     if query is None:
         return 'Query not specified', 400
     try:
-        content = Chain(config).ask(query, datasource)
+        content = Chain(config).ask(query, ds_type=datasource, session=session)
     except ValueError:
         return 'Service unavailable', 400
     if not content:

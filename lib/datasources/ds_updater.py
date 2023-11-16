@@ -17,29 +17,29 @@ class DSUpdater:
     def __init__(self, datasources):
         self.vector_store = VectorStore()
         self.datasources = datasources
-        self.update_timer = RepeatTimer(TIMER_INTERVAL, self._trigger_update)
-        self.update_thread = threading.Thread(target=self._update_data)
+        self.update_timer = RepeatTimer(TIMER_INTERVAL, self.__trigger_update)
+        self.update_thread = threading.Thread(target=self.__update_data)
         self.stop_update_thread = threading.Event()
         self.update_cond = threading.Condition()
         os.makedirs(META_DIR, exist_ok=True)
 
-    def _trigger_update(self):
+    def __trigger_update(self):
         self.update_cond.acquire()
         self.update_cond.notify()
         self.update_cond.release()
 
-    def _get_update_date(self):
+    def __get_update_date(self):
         if os.path.exists(UPDATE_TIME):
             with open(UPDATE_TIME) as f:
                 return datetime.strptime(f.readline(), TIME_FORMAT).date()
         return None
 
-    def _save_next_update_date(self):
+    def __save_next_update_date(self):
         now = datetime.now()
         with open(UPDATE_TIME, 'w+') as f:
             f.write(now.strftime(TIME_FORMAT))
 
-    def _update_data(self):
+    def __update_data(self):
         while True:
             self.update_cond.acquire()
             self.update_cond.wait()
@@ -47,14 +47,14 @@ class DSUpdater:
             if self.stop_update_thread.is_set():
                 break
 
-            start_date = self._get_update_date()
+            start_date = self.__get_update_date()
             end_date = (datetime.now() + timedelta(1)).date()
             for ds_type, ds in self.datasources.items():
                 for data in ds.get_update_data(start_date, end_date):
                     self.vector_store.update(ds_type,
                                              ds.model_manager.embeddings,
                                              data)
-            self._save_next_update_date()
+            self.__save_next_update_date()
             self.update_cond.release()
         self.update_timer.cancel()
         self.update_cond.notify()
@@ -73,10 +73,10 @@ class DSUpdater:
         self.update_cond.release()
 
     def initialize_data(self):
-        update_date = self._get_update_date()
+        update_date = self.__get_update_date()
         for ds_type, ds in self.datasources.items():
             for data in ds.get_initial_data(update_date):
                 self.vector_store.update(ds_type,
                                          ds.model_manager.embeddings,
                                          data)
-        self._save_next_update_date()
+        self.__save_next_update_date()

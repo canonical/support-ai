@@ -6,7 +6,7 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.datasources.ds import Data, Datasource
+from lib.datasources.ds import Data, Content, Datasource
 from lib.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
@@ -113,4 +113,10 @@ class KnowledgeBaseSource(Datasource):
     def get_content(self, doc):
         article = self.sf.query_all(f'SELECT Knowledge_1_Solution__c FROM Knowledge__kav '
                                     f'WHERE KnowledgeArticleId = \'{doc.metadata["article_id"]}\'')
-        return self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
+        return Content(
+                {},
+                self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
+                )
+
+    def generate_output(self, content):
+        return content.Summary

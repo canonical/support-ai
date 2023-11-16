@@ -1,5 +1,6 @@
 #!/usr/bin/env venv/bin/python
 
+import uuid
 import yaml
 from lib.const import CONFIG_PATH
 from lib.chain import Chain
@@ -9,6 +10,7 @@ if __name__ == '__main__':
     with open(CONFIG_PATH, 'r', encoding='utf8') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     chain = Chain(config)
+    session = str(uuid.uuid4())
 
     while True:
         query = input(">")
@@ -18,4 +20,4 @@ if __name__ == '__main__':
             break
         if not query:
             continue
-        print(chain.ask(query))
+        print(chain.ask(query, session=session))

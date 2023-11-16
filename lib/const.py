@@ -1,5 +1,5 @@
 CONFIG_PATH = 'config.yaml'
-CONFIG_CLASSIFICATION = 'classification'
+CONFIG_BASIC_MODEL = 'basic_model'
 CONFIG_DATASOURCES = 'datasources'
 CONFIG_TYPE = 'type'
 CONFIG_AUTHENTICATION = 'authentication'
