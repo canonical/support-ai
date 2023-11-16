@@ -1,7 +1,12 @@
 import simple_salesforce
+from functools import partial
+from operator import itemgetter
+from langchain.callbacks.manager import trace_as_chain_group
 from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnablePassthrough
+from langchain.text_splitter import CharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
 from lib.datasources.ds import Data, Content, Datasource
@@ -12,9 +17,13 @@ from lib.model_manager import ModelManager
 SYMPTOMS_PROMPT = """Generate five symptoms of the following:
     "{desc}"
     SYMPTOMS:"""
-SUMMARY_PROMPT = """Write a concise summary of the following:
+SUMMARY_PROMPT = """Summarize the following dialogs:
     "{comments}"
-    CONCISE SUMMARY:"""
+    SUMMARY:"""
+REFINE_PROMPT = """Here's your first summary: {prev_summary}.
+Now add to it based on the following context: {context}
+"""
+SEPERATOR = "%%%%%%%%"
 
 def get_authentication(auth_config):
     if CONFIG_USERNAME not in auth_config:
@@ -77,39 +86,69 @@ class SalesforceSource(Datasource):
     def get_update_data(self, start_date, end_date):
         return self.__get_cases(start_date, end_date)
 
+    def __translate_comments(self, records):
+        comments = []
+        for comment in records:
+            _records = self.sf.query_all(f'SELECT FirstName FROM User WHERE Id = \'{comment["CreatedById"]}\'')
+            firstname = _records['records'][0]['FirstName']
+            comments.append(f'{firstname}: {comment["CommentBody"]}')
+        return SEPERATOR.join(comment for comment in comments)
+
     @timed_lru_cache()
     def __get_summary(self, comments):
-        prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
-        chain = (
-                {'comments': RunnablePassthrough()}
-                | prompt
+        splitter = CharacterTextSplitter(
+                chunk_size=1024,
+                chunk_overlap=128,
+                separator=SEPERATOR
+                )
+        docs = splitter.create_documents([comments])
+        summary_prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
+        document_prompt = PromptTemplate.from_template("{page_content}")
+        partial_format_doc = partial(format_document, prompt=document_prompt)
+        summary_chain = (
+                {'comments': partial_format_doc}
+                | summary_prompt
                 | self.model_manager.llm
                 | StrOutputParser()
                 )
-        return chain.invoke(comments)
-
-    def get_content(self, doc):
-        cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
-                                 f'WHERE Id = \'{doc.metadata["id"]}\'')
-        case = cases['records'][0]
-        metadata = {
-                'case_number': case['CaseNumber'],
-                'status': case['Status'],
-                'sev_lv': case['Sev_Lvl__c'],
-                'bug_url': case['Public_Bug_URL__c']
+        refine_prompt = PromptTemplate.from_template(REFINE_PROMPT)
+        refine_chain = (
+                {
+                    'prev_summary': itemgetter('prev_summary'),
+                    'context': lambda input: partial_format_doc(input['doc']),
                 }
+                | refine_prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
 
-        comments = self.sf.query_all(f'SELECT CommentBody FROM CaseComment ' 
-                                     f'WHERE ParentId = \'{doc.metadata["id"]}\' '
+        with trace_as_chain_group('refine loop', inputs={'input': docs}) as manager:
+            summary = summary_chain.invoke(docs[0], config={'callbacks': manager})
+            for doc in docs[1:]:
+                summary = refine_chain.invoke(
+                        {"prev_summary": summary, "doc": doc},
+                        config={"callbacks": manager}
+                        )
+            manager.on_chain_end({"output": summary})
+        return summary
+
+    def get_content(self, metadata):
+        cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
+                                 f'WHERE Id = \'{metadata["id"]}\'')
+        case = cases['records'][0]
+
+        records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
+                                     f'WHERE ParentId = \'{metadata["id"]}\' AND IsPublished = True '
                                      f'ORDER BY LastModifiedDate')
-        body = ''
-        for comment in comments['records']:
-            if body:
-                body += '\n'
-            body += comment['CommentBody']
+        comments = self.__translate_comments(records['records'])
         return Content(
-                metadata,
-                self.__get_summary(body)
+                {
+                    'case_number': case['CaseNumber'],
+                    'status': case['Status'],
+                    'sev_lv': case['Sev_Lvl__c'],
+                    'bug_url': case['Public_Bug_URL__c']
+                },
+                self.__get_summary(comments)
                 )
 
     def generate_output(self, content):

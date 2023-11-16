@@ -42,7 +42,7 @@ class Chain:
 
     def ask(self, query, ds_type=None, session=None):
         ds, doc = self.ds_querier.query(query, ds_type)
-        content = ds.get_content(doc)
+        content = ds.get_content(doc.metadata)
         if session is not None:
             memory = self.__get_memory(session)
             content.Summary = self.__get_summary_with_memory(memory, query, content.Summary)

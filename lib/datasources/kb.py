@@ -110,9 +110,9 @@ class KnowledgeBaseSource(Datasource):
                 )
         return chain.invoke(solution)
 
-    def get_content(self, doc):
+    def get_content(self, metadata):
         article = self.sf.query_all(f'SELECT Knowledge_1_Solution__c FROM Knowledge__kav '
-                                    f'WHERE KnowledgeArticleId = \'{doc.metadata["article_id"]}\'')
+                                    f'WHERE KnowledgeArticleId = \'{metadata["article_id"]}\'')
         return Content(
                 {},
                 self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
