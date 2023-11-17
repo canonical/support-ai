@@ -7,7 +7,7 @@ from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
 from lib.datasources.ds import Data, Content, Datasource
-from lib.lru import timed_lru_cache
+from lib.utils.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
