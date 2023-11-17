@@ -1,26 +1,23 @@
 import simple_salesforce
-from functools import partial
-from operator import itemgetter
-from langchain.callbacks.manager import trace_as_chain_group
-from langchain.prompts import PromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.prompt_template import format_document
-from langchain.schema.runnable import RunnablePassthrough
 from langchain.text_splitter import CharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
 from lib.datasources.ds import Data, Content, Datasource
+from lib.utils.docs_chain import docs_map_reduce, docs_refine
 from lib.utils.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
 SYMPTOMS_PROMPT = """Generate five symptoms of the following:
-    "{desc}"
+    {context}
+    SYMPTOMS:"""
+COMBINE_SYMPTOMS_PROMPT = """Combine the symptons into five symptoms:
+    {context}
     SYMPTOMS:"""
 SUMMARY_PROMPT = """Summarize the following dialogs:
-    "{comments}"
+    "{context}"
     SUMMARY:"""
-REFINE_PROMPT = """Here's your first summary: {prev_summary}.
+REFINE_PROMPT = """Here's your first summary: {prev_context}.
 Now add to it based on the following context: {context}
 """
 SEPERATOR = "%%%%%%%%"
@@ -47,14 +44,12 @@ class SalesforceSource(Datasource):
         self.model_manager = ModelManager(config)
 
     def __generate_symptoms(self, desc):
-        prompt = PromptTemplate.from_template(SYMPTOMS_PROMPT)
-        chain = (
-                {'desc': RunnablePassthrough()}
-                | prompt
-                | self.model_manager.llm
-                | StrOutputParser()
+        splitter = CharacterTextSplitter(
+                chunk_size=2048,
+                chunk_overlap=128,
                 )
-        return chain.invoke(desc)
+        docs = splitter.create_documents([desc])
+        return docs_map_reduce(self.model_manager.llm, docs, SYMPTOMS_PROMPT, COMBINE_SYMPTOMS_PROMPT)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
@@ -102,35 +97,7 @@ class SalesforceSource(Datasource):
                 separator=SEPERATOR
                 )
         docs = splitter.create_documents([comments])
-        summary_prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
-        document_prompt = PromptTemplate.from_template("{page_content}")
-        partial_format_doc = partial(format_document, prompt=document_prompt)
-        summary_chain = (
-                {'comments': partial_format_doc}
-                | summary_prompt
-                | self.model_manager.llm
-                | StrOutputParser()
-                )
-        refine_prompt = PromptTemplate.from_template(REFINE_PROMPT)
-        refine_chain = (
-                {
-                    'prev_summary': itemgetter('prev_summary'),
-                    'context': lambda input: partial_format_doc(input['doc']),
-                }
-                | refine_prompt
-                | self.model_manager.llm
-                | StrOutputParser()
-                )
-
-        with trace_as_chain_group('refine loop', inputs={'input': docs}) as manager:
-            summary = summary_chain.invoke(docs[0], config={'callbacks': manager})
-            for doc in docs[1:]:
-                summary = refine_chain.invoke(
-                        {"prev_summary": summary, "doc": doc},
-                        config={"callbacks": manager}
-                        )
-            manager.on_chain_end({"output": summary})
-        return summary
+        return docs_refine(self.model_manager.llm, docs, SUMMARY_PROMPT, REFINE_PROMPT)
 
     def get_content(self, metadata):
         cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
