@@ -69,6 +69,8 @@ class SalesforceSource(Datasource):
         cases = self.sf.query_all(sql_cmd)
 
         for case in cases['records']:
+            if case['Description'] is None:
+                continue
             yield Data(
                     self.__generate_symptoms(case['Description']),
                     {'id': case['Id'], 'subject': case['Subject']},
