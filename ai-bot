@@ -20,4 +20,5 @@ if __name__ == '__main__':
             break
         if not query:
             continue
-        print(chain.ask(query, session=session))
+        for token in chain.ask(query, session=session):
+            print(token, end='')

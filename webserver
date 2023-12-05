@@ -1,7 +1,7 @@
 #!/usr/bin/env venv/bin/python
 
 import yaml
-from flask import Flask, request
+from flask import Flask, request, Response
 from lib.const import CONFIG_PATH
 from lib.chain import Chain
 
@@ -18,12 +18,9 @@ def ask_ai():
     if query is None:
         return 'Query not specified', 400
     try:
-        content = Chain(config).ask(query, ds_type=datasource, session=session)
+        return Response(Chain(config).ask(query, ds_type=datasource, session=session), mimetype='text/plain')
     except ValueError:
         return 'Service unavailable', 400
-    if not content:
-        return 'Response unavailable', 500
-    return content, 200
 
 if __name__ == '__main__':
     app.run(debug=True)

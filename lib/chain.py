@@ -40,6 +40,16 @@ class Chain:
                 )
         return chain.invoke({'context': context, 'query': query})
 
+    def __stream(self, output):
+        delimiters = [' ', '\t', '\n']
+        l, r = 0, 0
+        for r in range(len(output)):
+            if output[r] in delimiters:
+                yield output[l:r+1]
+                l = r + 1
+        if l < r:
+            yield output[l:r+1]
+
     def ask(self, query, ds_type=None, session=None):
         ds, doc = self.ds_querier.query(query, ds_type)
         content = ds.get_content(doc.metadata)
@@ -47,4 +57,4 @@ class Chain:
             memory = self.__get_memory(session)
             content.Summary = self.__get_summary_with_memory(memory, query, content.Summary)
             memory.save_context({'input': query}, {'output': content.Summary})
-        return ds.generate_output(content)
+        return self.__stream(ds.generate_output(content))
