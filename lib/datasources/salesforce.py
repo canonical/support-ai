@@ -1,5 +1,5 @@
 import simple_salesforce
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
 from lib.datasources.ds import Data, Content, Datasource
@@ -11,7 +11,7 @@ from lib.model_manager import ModelManager
 SYMPTOMS_PROMPT = """Generate five symptoms of the following:
     {context}
     SYMPTOMS:"""
-COMBINE_SYMPTOMS_PROMPT = """Combine the symptons into five symptoms:
+COMBINE_SYMPTOMS_PROMPT = """Combine the symptoms into five symptoms:
     {context}
     SYMPTOMS:"""
 SUMMARY_PROMPT = """Summarize the following dialogs:
@@ -44,8 +44,8 @@ class SalesforceSource(Datasource):
         self.model_manager = ModelManager(config)
 
     def __generate_symptoms(self, desc):
-        splitter = CharacterTextSplitter(
-                chunk_size=2048,
+        splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1024,
                 chunk_overlap=128,
                 )
         docs = splitter.create_documents([desc])
@@ -93,7 +93,7 @@ class SalesforceSource(Datasource):
 
     @timed_lru_cache()
     def __get_summary(self, comments):
-        splitter = CharacterTextSplitter(
+        splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1024,
                 chunk_overlap=128,
                 separator=SEPERATOR

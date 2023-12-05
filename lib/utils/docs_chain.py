@@ -68,7 +68,7 @@ def docs_map_reduce(llm, docs, map_prompt, reduce_prompt):
     def get_num_tokens(docs):
         return llm.get_num_tokens(format_docs(docs))
 
-    def collapse(docs, config, token_max=4000):
+    def collapse(docs, config, token_max=3072):
         while get_num_tokens(docs) > token_max:
             invoke = partial(collapse_chain.invoke, config=config)
             split_docs = split_list_of_docs(docs, get_num_tokens, token_max)
