@@ -1,27 +1,26 @@
 import streamlit as st
+import time
 import requests
 
 WEBSERVER_URL = 'http://127.0.0.1:5000/'
 
-# Define the Streamlit app
-st.title('Avalokitesvara')
+st.title('Support AI')
 
-# Create a text input field for user input
 query = st.text_area(label='Query',
                      placeholder='Please describe the symptom you experienced.',
                      label_visibility='hidden')
 
-# Create a button to trigger the POST request
 if query:
-    # Define the URL to which you want to send the POST request
-    sf_url = WEBSERVER_URL + 'salesforce'
-
-    # Define the data to be sent in the POST request (you can modify this as needed)
+    url = WEBSERVER_URL + 'ask_ai'
     data = {'query': query}
 
-    # Send the POST request
+    st.session_state.content = ''
     try:
-        response = requests.post(sf_url, data=data)
-        st.write(response.text)
+        response = requests.post(url, data=data)
+        with st.empty():
+            for token in response.iter_content():
+                st.session_state.content += "  \n" if token == b'\n' else token.decode('utf-8')
+                st.write(st.session_state.content)
+                time.sleep(1/10)
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred: {e}")
