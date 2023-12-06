@@ -6,11 +6,12 @@ from lib.const import CONFIG_PATH
 from lib.chain import Chain
 
 app = Flask(__name__)
+with open(CONFIG_PATH, 'r', encoding='utf8') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+chain = Chain(config)
 
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
-    with open(CONFIG_PATH, 'r', encoding='utf8') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
     query = request.form.get('query')
     datasource = request.form.get('datasource')
     session = request.form.get('session')
@@ -18,7 +19,7 @@ def ask_ai():
     if query is None:
         return 'Query not specified', 400
     try:
-        return Response(Chain(config).ask(query, ds_type=datasource, session=session), mimetype='text/plain')
+        return Response(chain.ask(query, ds_type=datasource, session=session), mimetype='text/plain')
     except ValueError:
         return 'Service unavailable', 400
 
