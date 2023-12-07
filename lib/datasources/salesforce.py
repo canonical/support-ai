@@ -96,7 +96,8 @@ class SalesforceSource(Datasource):
         splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1024,
                 chunk_overlap=128,
-                separator=SEPERATOR
+                separators=[SEPERATOR],
+                keep_separator=False
                 )
         docs = splitter.create_documents([comments])
         return docs_refine(self.model_manager.llm, docs, SUMMARY_PROMPT, REFINE_PROMPT)
