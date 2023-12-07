@@ -1,5 +1,7 @@
 CONFIG_PATH = 'config.yaml'
 CONFIG_BASIC_MODEL = 'basic_model'
+CONFIG_CHAT_MEMORY = 'chat_memory'
+CONFIG_DB_CONNECTION = 'db_connection'
 CONFIG_DATASOURCES = 'datasources'
 CONFIG_TYPE = 'type'
 CONFIG_AUTHENTICATION = 'authentication'

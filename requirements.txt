@@ -3,6 +3,7 @@ flask
 langchain
 llama-cpp-python
 openai
+pymongo
 pyyaml
 sentence-transformers
 simple_salesforce
