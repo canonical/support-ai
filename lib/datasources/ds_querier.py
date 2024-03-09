@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
-from lib.const import CONFIG_BASIC_MODEL, CONFIG_SF
+from lib.const import CONFIG_BASIC_MODEL
 from lib.datasources.utils import get_datasources
 from lib.model_manager import ModelManager
 from lib.vectorstore import VectorStore
@@ -29,6 +29,8 @@ class DSQuerier:
         self.vector_store = VectorStore()
 
     def __judge_ds_type(self, query):
+        if len(self.datasources) == 1:
+            return list(self.datasources.keys())[0]
         prompt = PromptTemplate.from_template(CLASSIFICATION_PROMPT)
         chain = (
                 {'query': RunnablePassthrough()}
@@ -38,7 +40,7 @@ class DSQuerier:
                 )
         ds_type = chain.invoke(query)
         if ds_type not in self.datasources:
-            return CONFIG_SF
+            return list(self.datasources.keys())[0]
         return ds_type
 
     def __get_ds(self, ds_type):
