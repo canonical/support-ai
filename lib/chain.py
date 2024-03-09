@@ -70,3 +70,13 @@ class Chain:
             content.Summary = self.__get_summary_with_memory(memory, query, content.Summary)
             memory.save_context({'input': query}, {'output': content.Summary})
         return self.__stream(ds.generate_output(content))
+
+    def clear_history(self, session):
+        with self.mutex:
+            chat_memory = MongoDBChatMessageHistory(
+                    connection_string=self.db_connection,
+                    session_id=session
+                    )
+            ConversationSummaryBufferMemory(chat_memory=chat_memory).clear()
+            if session in self.memories:
+                del self.memories[session]

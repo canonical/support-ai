@@ -1,7 +1,7 @@
 #!/usr/bin/env venv/bin/python
 
 import yaml
-from flask import Flask, request, Response
+from flask import Flask, jsonify, request, Response
 from lib.const import CONFIG_PATH
 from lib.chain import Chain
 
@@ -22,6 +22,15 @@ def ask_ai():
         return Response(chain.ask(query, ds_type=datasource, session=session), mimetype='text/plain')
     except ValueError:
         return 'Service unavailable', 400
+
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    session = request.form.get('session')
+
+    if session is None:
+        return 'Session not specified', 400
+    chain.clear_history(session)
+    return jsonify(success=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
