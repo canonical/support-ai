@@ -8,7 +8,7 @@ basic_model:
   llm:
     type: huggingface_pipeline
     model: databricks/dolly-v2-12b
-chat_memory:
+memory:
   db_connection: "mongodb://XXX"
 datasources:
   - type: salesforce
