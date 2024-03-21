@@ -1,4 +1,5 @@
 import simple_salesforce
+from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
@@ -9,18 +10,45 @@ from lib.model_manager import ModelManager
 
 
 SYMPTOMS_PROMPT = """Generate five symptoms of the following:
-    {context}
+    "{context}"
     SYMPTOMS:"""
 COMBINE_SYMPTOMS_PROMPT = """Combine the symptoms into five symptoms:
-    {context}
+    "{context}"
     SYMPTOMS:"""
-SUMMARY_PROMPT = """Summarize the following dialogs:
+CONDENSE_INITIAL_PROMPT = """Summarize the following dialog:
     "{context}"
     SUMMARY:"""
-REFINE_PROMPT = """Here's your first summary: {prev_context}.
-Now add to it based on the following context: {context}
-"""
-SEPERATOR = "%%%%%%%%"
+CONDENSE_REFINE_PROMPT = """Here's the previous summary:
+    "{prev_context}"
+    Integrate it with the following dialog:
+    "{context}"
+    SUMMARY:"""
+SUMMARIZE_INITIAL_PROMPT = """Integrate the following conversation:
+    "{context}"
+    CONVERSATION:"""
+SUMMARIZE_REFINE_PROMPT = """Here's the previous integrated conversations:
+    "{prev_context}"
+    Integrate it with the following conversation:
+    "{context}"
+    CONVERSATION:"""
+
+
+class Dialogs:
+    def __init__(self):
+        self.dialogs = []
+
+    def append(self, user, comment):
+        self.dialogs.append({
+            'user': user,
+            'comment': comment,
+            })
+
+    def __hash__(self):
+        return hash(tuple(str(dialog) for dialog in self.dialogs))
+
+    def __iter__(self):
+        return iter(self.dialogs)
+
 
 def get_authentication(auth_config):
     if CONFIG_USERNAME not in auth_config:
@@ -34,6 +62,7 @@ def get_authentication(auth_config):
             'password': auth_config[CONFIG_PASSWORD],
             'security_token': auth_config[CONFIG_TOKEN]
             }
+
 
 class SalesforceSource(Datasource):
     def __init__(self, config):
@@ -83,24 +112,46 @@ class SalesforceSource(Datasource):
     def get_update_data(self, start_date, end_date):
         return self.__get_cases(start_date, end_date)
 
-    def __translate_comments(self, records):
-        comments = []
+    def __translate_into_dialogs(self, records):
+        dialogs = Dialogs()
         for comment in records:
             _records = self.sf.query_all(f'SELECT FirstName FROM User WHERE Id = \'{comment["CreatedById"]}\'')
             firstname = _records['records'][0]['FirstName']
-            comments.append(f'{firstname}: {comment["CommentBody"]}')
-        return SEPERATOR.join(comment for comment in comments)
+            dialogs.append(firstname, comment["CommentBody"])
+        return dialogs
+
+    def __condense_comments(self, comments):
+        splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1536,
+                chunk_overlap=128,
+                length_function=len,
+                )
+        docs = splitter.create_documents(comments)
+        return docs_refine(self.model_manager.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
+
+    def __summarize_dialogs(self, dialogs):
+        docs = []
+        for dialog in dialogs:
+            docs.append(Document(page_content=dialog['comment'], metadata={"user": dialog['user']}))
+
+        return docs_refine(self.model_manager.llm, docs, SUMMARIZE_INITIAL_PROMPT, SUMMARIZE_REFINE_PROMPT)
 
     @timed_lru_cache()
-    def __get_summary(self, comments):
-        splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1024,
-                chunk_overlap=128,
-                separators=[SEPERATOR],
-                keep_separator=False
-                )
-        docs = splitter.create_documents([comments])
-        return docs_refine(self.model_manager.llm, docs, SUMMARY_PROMPT, REFINE_PROMPT)
+    def __get_summary(self, dialogs):
+        condensed_dialogs = Dialogs()
+        user = ''
+        comments = []
+        for dialog in dialogs:
+            if not user or user == dialog['user']:
+                user = dialog['user']
+                comments.append(dialog['comment'])
+                continue
+            condensed_dialogs.append(user, self.__condense_comments(comments))
+            user = dialog['user']
+            comments = [dialog['comment']]
+        condensed_dialogs.append(user, self.__condense_comments(comments))
+
+        return self.__summarize_dialogs(condensed_dialogs)
 
     def get_content(self, metadata):
         cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
@@ -110,7 +161,7 @@ class SalesforceSource(Datasource):
         records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
                                      f'WHERE ParentId = \'{metadata["id"]}\' AND IsPublished = True '
                                      f'ORDER BY LastModifiedDate')
-        comments = self.__translate_comments(records['records'])
+        dialogs = self.__translate_into_dialogs(records['records'])
         return Content(
                 {
                     'case_number': case['CaseNumber'],
@@ -118,7 +169,7 @@ class SalesforceSource(Datasource):
                     'sev_lv': case['Sev_Lvl__c'],
                     'bug_url': case['Public_Bug_URL__c']
                 },
-                self.__get_summary(comments)
+                self.__get_summary(dialogs)
                 )
 
     def generate_output(self, content):
