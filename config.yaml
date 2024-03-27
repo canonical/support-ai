@@ -17,7 +17,9 @@ datasources:
       password: ""
       token: ""
     llm:
+      # type can be one of llamacpp/openai/huggingface_pipeline
       type: huggingface_pipeline
+      # model can be absolute path where model you directly downloaded.
       model: databricks/dolly-v2-12b
     embeddings:
       type: huggingface_pipeline
