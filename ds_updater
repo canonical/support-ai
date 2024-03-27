@@ -20,7 +20,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
 
-    ds_updater.initialize_data()
     ds_updater.start_update_thread()
     while True:
         time.sleep(30)

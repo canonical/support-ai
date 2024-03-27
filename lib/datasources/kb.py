@@ -93,9 +93,6 @@ class KnowledgeBaseSource(Datasource):
                     article['Id']
             )
 
-    def get_initial_data(self, start_date):
-        return self.__get_articles(start_date)
-
     def get_update_data(self, start_date, end_date):
         return self.__get_articles(start_date, end_date)
 

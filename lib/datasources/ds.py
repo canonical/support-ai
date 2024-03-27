@@ -14,10 +14,6 @@ class Content:
 
 class Datasource(ABC):
     @abstractmethod
-    def get_initial_data(self, start_date):
-        return NotImplemented
-
-    @abstractmethod
     def get_update_data(self, start_date, end_date):
         return NotImplemented
 
