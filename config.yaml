@@ -17,7 +17,11 @@ datasources:
       password: ""
       token: ""
     llm:
+      # type can be one of llamacpp/openai/huggingface_pipeline
       type: huggingface_pipeline
+      # model can be absolute path where model you directly downloaded.
+      # for example. if you want to use dolphin-2.2.1-mistral-7b.Q5_K_M.gguf model, 
+      # you can download it from huggingface and place the location of it.
       model: databricks/dolly-v2-12b
     embeddings:
       type: huggingface_pipeline
