@@ -1,5 +1,8 @@
 import simple_salesforce
 from langchain_core.documents import Document
+from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.runnable import RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
@@ -9,10 +12,10 @@ from lib.utils.lru import timed_lru_cache
 from lib.model_manager import ModelManager
 
 
-SYMPTOMS_PROMPT = """Generate five symptoms of the following:
+SYMPTOM_MAP_PROMPT = """Generate symptoms of the following:
     "{context}"
     SYMPTOMS:"""
-COMBINE_SYMPTOMS_PROMPT = """Combine the symptoms into five symptoms:
+SYMPTOM_REDUCE_PROMPT = """Combine the symptoms:
     "{context}"
     SYMPTOMS:"""
 CONDENSE_INITIAL_PROMPT = """Summarize the following dialog:
@@ -23,15 +26,29 @@ CONDENSE_REFINE_PROMPT = """Here's the previous summary:
     Integrate it with the following dialog:
     "{context}"
     SUMMARY:"""
-SUMMARIZE_INITIAL_PROMPT = """Integrate the following conversation:
+TROUBLESHOOTING_PROCESS_INITIAL_PROMPT = """Integrate the following conversation:
     "{context}"
     CONVERSATION:"""
-SUMMARIZE_REFINE_PROMPT = """Here's the previous integrated conversations:
+TROUBLESHOOTING_PROCESS_REFINE_PROMPT = """Here's the previous integrated conversations:
     "{prev_context}"
     Integrate it with the following conversation:
     "{context}"
     CONVERSATION:"""
-
+SOLUTION_JUDGEMENT_PROMPT = """Judge if the following comment has described root cause, solution or workaround:
+    The issue is mainly caused by the bug. // YES
+    The issue can be solved by the following approach. // YES
+    We can provide a workaround to bypass this issue. // YES
+    We are still working on this issue. // NO
+    "{context}" //
+"""
+SOLUTION_INITIAL_PROMPT = """Extract the root cause, workaround or solution from the following conversation:
+    "{context}"
+    SOLUTION:"""
+SOLUTION_REFINE_PROMPT = """Here's the previous extracted context:
+    "{prev_context}"
+    Combine it with the following conversation:
+    "{context}"
+    SOLUTION:"""
 
 class Dialogs:
     def __init__(self):
@@ -72,13 +89,13 @@ class SalesforceSource(Datasource):
         self.sf = simple_salesforce.Salesforce(**auth)
         self.model_manager = ModelManager(config)
 
-    def __generate_symptoms(self, desc):
+    def __get_symptom(self, desc):
         splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1024,
                 chunk_overlap=128,
                 )
         docs = splitter.create_documents([desc])
-        return docs_map_reduce(self.model_manager.llm, docs, SYMPTOMS_PROMPT, COMBINE_SYMPTOMS_PROMPT)
+        return docs_map_reduce(self.model_manager.llm, docs, SYMPTOM_MAP_PROMPT, SYMPTOM_REDUCE_PROMPT)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
@@ -95,13 +112,11 @@ class SalesforceSource(Datasource):
 
         sql_cmd = 'SELECT Id, CaseNumber, Subject, Description ' + \
                 'FROM Case' + (f' WHERE {clause}' if clause else '')
-        cases = self.sf.query_all(sql_cmd)
-
-        for case in cases['records']:
+        for case in self.sf.query_all(sql_cmd)['records']:
             if case['Description'] is None:
                 continue
             yield Data(
-                    self.__generate_symptoms(case['Description']),
+                    self.__get_symptom(case['Description']),
                     {'id': case['Id'], 'subject': case['Subject']},
                     case['CaseNumber']
                     )
@@ -126,15 +141,33 @@ class SalesforceSource(Datasource):
         docs = splitter.create_documents(comments)
         return docs_refine(self.model_manager.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
 
-    def __summarize_dialogs(self, dialogs):
+    def __get_troubleshooting_process(self, dialogs):
         docs = []
         for dialog in dialogs:
             docs.append(Document(page_content=dialog['comment'], metadata={"user": dialog['user']}))
+        return docs_refine(self.model_manager.llm, docs, TROUBLESHOOTING_PROCESS_INITIAL_PROMPT, TROUBLESHOOTING_PROCESS_REFINE_PROMPT)
 
-        return docs_refine(self.model_manager.llm, docs, SUMMARIZE_INITIAL_PROMPT, SUMMARIZE_REFINE_PROMPT)
+    def __get_solution(self, dialogs):
+        prompt = PromptTemplate.from_template(SOLUTION_JUDGEMENT_PROMPT)
+        chain = (
+                {'context': RunnablePassthrough()}
+                | prompt
+                | self.model_manager.llm
+                | StrOutputParser()
+                )
+        comments = []
+        for dialog in dialogs:
+            result = chain.invoke(dialog['comment'])
+            if result != 'NO':
+                comments.append(dialog['comment'])
+
+        docs = []
+        for comment in comments:
+            docs.append(Document(page_content=comment))
+        return docs_refine(self.model_manager.llm, docs, SOLUTION_INITIAL_PROMPT, SOLUTION_REFINE_PROMPT)
 
     @timed_lru_cache()
-    def __get_summary(self, dialogs):
+    def __get_summary(self, desc, dialogs):
         condensed_dialogs = Dialogs()
         user = ''
         comments = []
@@ -147,14 +180,15 @@ class SalesforceSource(Datasource):
             user = dialog['user']
             comments = [dialog['comment']]
         condensed_dialogs.append(user, self.__condense_comments(comments))
-
-        return self.__summarize_dialogs(condensed_dialogs)
+        return '\n'.join([
+            self.__get_symptom(desc),
+            self.__get_troubleshooting_process(condensed_dialogs),
+            self.__get_solution(condensed_dialogs)
+            ])
 
     def get_content(self, metadata):
-        cases = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber FROM Case ' +
-                                 f'WHERE Id = \'{metadata["id"]}\'')
-        case = cases['records'][0]
-
+        case = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
+                                 f'WHERE Id = \'{metadata["id"]}\'')['records'][0]
         records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
                                      f'WHERE ParentId = \'{metadata["id"]}\' AND IsPublished = True '
                                      f'ORDER BY LastModifiedDate')
@@ -166,7 +200,7 @@ class SalesforceSource(Datasource):
                     'sev_lv': case['Sev_Lvl__c'],
                     'bug_url': case['Public_Bug_URL__c']
                 },
-                self.__get_summary(dialogs)
+                self.__get_summary(case['Description'], dialogs)
                 )
 
     def generate_output(self, content):
