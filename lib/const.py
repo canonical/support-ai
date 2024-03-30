@@ -19,6 +19,7 @@ CONFIG_KB = 'knowledgebase'
 CONFIG_LLAMACPP = 'llamacpp'
 CONFIG_OPENAI = 'openai'
 CONFIG_HUGGINGFACE_PIPELINE = 'huggingface_pipeline'
+CONFIG_OLLAMA = 'ollama'
 # LLM OpemAI
 CONFIG_LLM_OPENAI_API_KEY = 'api_key'
 
