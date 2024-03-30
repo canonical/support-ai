@@ -2,8 +2,8 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_BASIC_MODEL
+from lib.context import BaseContext
 from lib.datasources.utils import get_datasources
-from lib.model_manager import ModelManager
 from lib.vectorstore import VectorStore
 
 
@@ -20,11 +20,12 @@ Do not respond with the answer other than salesforce, knowledgebase.
 Question: {query}
 Answer:"""
 
-class DSQuerier:
+class DSQuerier(BaseContext):
     def __init__(self, config):
+        super().__init__(config)
         if CONFIG_BASIC_MODEL not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_BASIC_MODEL}')
-        self.basic_model = ModelManager(config[CONFIG_BASIC_MODEL])
+        self.model = self.model_manager.get_model(config[CONFIG_BASIC_MODEL])
         self.datasources = get_datasources(config)
         self.vector_store = VectorStore()
 
@@ -35,7 +36,7 @@ class DSQuerier:
         chain = (
                 {'query': RunnablePassthrough()}
                 | prompt
-                | self.basic_model.llm
+                | self.model.llm
                 | StrOutputParser()
                 )
         ds_type = chain.invoke(query)

@@ -1,15 +1,16 @@
 from lib.const import CONFIG_BASIC_MODEL, CONFIG_MEMORY
+from lib.context import BaseContext
 from lib.datasources.ds_querier import DSQuerier
 from lib.memory import Memory
-from lib.model_manager import ModelManager
 
 
-class Chain:
+class Chain(BaseContext):
     def __init__(self, config):
+        super().__init__(config)
         if CONFIG_BASIC_MODEL not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_BASIC_MODEL}')
-        self.basic_model = ModelManager(config[CONFIG_BASIC_MODEL])
-        self.memory = Memory(config[CONFIG_MEMORY], self.basic_model.llm) if CONFIG_MEMORY in config else None
+        self.model = self.model_manager.get_model(config[CONFIG_BASIC_MODEL])
+        self.memory = Memory(config[CONFIG_MEMORY], self.model.llm) if CONFIG_MEMORY in config else None
         self.ds_querier = DSQuerier(config)
 
     def __stream(self, output):
@@ -26,7 +27,7 @@ class Chain:
         ds, doc = self.ds_querier.query(query, ds_type)
         content = ds.get_content(doc.metadata)
         if session is not None and self.memory is not None:
-            content.Summary = self.memory.integrate(session, query, content.Summary)
+            content.summary = self.memory.integrate(session, query, content.Summary)
         return self.__stream(ds.generate_output(content))
 
     def clear_history(self, session):

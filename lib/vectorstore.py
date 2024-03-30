@@ -18,7 +18,7 @@ class VectorStore:
 
     def update(self, ds_type, embedding, data):
         self.__get_vectorstore(ds_type, embedding) \
-                .add_texts([data.Document], [data.Metadata], [data.Id])
+                .add_texts([data.document], [data.metadata], [data.id])
 
     def similarity_search(self, ds_type, embedding, query):
         return self.__get_vectorstore(ds_type, embedding).similarity_search(query)

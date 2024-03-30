@@ -6,9 +6,9 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
+from lib.context import BaseContext
 from lib.datasources.ds import Data, Content, Datasource
 from lib.utils.lru import timed_lru_cache
-from lib.model_manager import ModelManager
 
 
 QUESTIONS_PROMPT = """Generate five questions that can be answered by the article with the summary:
@@ -50,20 +50,21 @@ def get_authentication(auth_config):
             'security_token': auth_config[CONFIG_TOKEN]
             }
 
-class KnowledgeBaseSource(Datasource):
+class KnowledgeBaseSource(BaseContext, Datasource):
     def __init__(self, config):
+        super().__init__(config)
         if CONFIG_AUTHENTICATION not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_AUTHENTICATION}')
         auth = get_authentication(config[CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
-        self.model_manager = ModelManager(config)
+        self.model = self.model_manager.get_model(config)
 
     def __generate_qeustions(self, summary):
         prompt = PromptTemplate.from_template(QUESTIONS_PROMPT)
         chain = (
                 {'summary': RunnablePassthrough()}
                 | prompt
-                | self.model_manager.llm
+                | self.model.llm
                 | StrOutputParser()
                 )
         return chain.invode(summary)
@@ -102,7 +103,7 @@ class KnowledgeBaseSource(Datasource):
         chain = (
                 {'solution': RunnablePassthrough()}
                 | prompt
-                | self.model_manager.llm
+                | self.model.llm
                 | StrOutputParser()
                 )
         return chain.invoke(solution)
@@ -116,4 +117,4 @@ class KnowledgeBaseSource(Datasource):
                 )
 
     def generate_output(self, content):
-        return content.Summary
+        return content.summary

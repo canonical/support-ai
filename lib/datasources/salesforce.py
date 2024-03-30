@@ -6,10 +6,10 @@ from langchain.schema.runnable import RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
+from lib.context import BaseContext
 from lib.datasources.ds import Data, Content, Datasource
 from lib.utils.docs_chain import docs_map_reduce, docs_refine
 from lib.utils.lru import timed_lru_cache
-from lib.model_manager import ModelManager
 
 
 SYMPTOM_MAP_PROMPT = """Generate symptoms of the following:
@@ -81,13 +81,14 @@ def get_authentication(auth_config):
             }
 
 
-class SalesforceSource(Datasource):
+class SalesforceSource(BaseContext, Datasource):
     def __init__(self, config):
+        super().__init__(config)
         if CONFIG_AUTHENTICATION not in config:
             raise ValueError(f'The config doesn\'t contain {CONFIG_AUTHENTICATION}')
         auth = get_authentication(config[CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
-        self.model_manager = ModelManager(config)
+        self.model = self.model_manager.get_model(config)
 
     def __get_symptom(self, desc):
         splitter = RecursiveCharacterTextSplitter(
@@ -95,7 +96,7 @@ class SalesforceSource(Datasource):
                 chunk_overlap=128,
                 )
         docs = splitter.create_documents([desc])
-        return docs_map_reduce(self.model_manager.llm, docs, SYMPTOM_MAP_PROMPT, SYMPTOM_REDUCE_PROMPT)
+        return docs_map_reduce(self.model.llm, docs, SYMPTOM_MAP_PROMPT, SYMPTOM_REDUCE_PROMPT)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
@@ -139,20 +140,20 @@ class SalesforceSource(Datasource):
                 length_function=len,
                 )
         docs = splitter.create_documents(comments)
-        return docs_refine(self.model_manager.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
 
     def __get_troubleshooting_process(self, dialogs):
         docs = []
         for dialog in dialogs:
             docs.append(Document(page_content=dialog['comment'], metadata={"user": dialog['user']}))
-        return docs_refine(self.model_manager.llm, docs, TROUBLESHOOTING_PROCESS_INITIAL_PROMPT, TROUBLESHOOTING_PROCESS_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, TROUBLESHOOTING_PROCESS_INITIAL_PROMPT, TROUBLESHOOTING_PROCESS_REFINE_PROMPT)
 
     def __get_solution(self, dialogs):
         prompt = PromptTemplate.from_template(SOLUTION_JUDGEMENT_PROMPT)
         chain = (
                 {'context': RunnablePassthrough()}
                 | prompt
-                | self.model_manager.llm
+                | self.model.llm
                 | StrOutputParser()
                 )
         comments = []
@@ -164,7 +165,7 @@ class SalesforceSource(Datasource):
         docs = []
         for comment in comments:
             docs.append(Document(page_content=comment))
-        return docs_refine(self.model_manager.llm, docs, SOLUTION_INITIAL_PROMPT, SOLUTION_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, SOLUTION_INITIAL_PROMPT, SOLUTION_REFINE_PROMPT)
 
     @timed_lru_cache()
     def __get_summary(self, desc, dialogs):
@@ -204,8 +205,8 @@ class SalesforceSource(Datasource):
                 )
 
     def generate_output(self, content):
-        return f'Case:\t\t{content.Metadata["case_number"]}\n' \
-                f'Status:\t\t{content.Metadata["status"]}\n' \
-                f'Severity Level:\t{content.Metadata["sev_lv"]}\n' \
-                f'Bug URL:\t{content.Metadata["bug_url"]}\n' \
-                f'Summary:\n{content.Summary}\n'
+        return f'Case:\t\t{content.metadata["case_number"]}\n' \
+                f'Status:\t\t{content.metadata["status"]}\n' \
+                f'Severity Level:\t{content.metadata["sev_lv"]}\n' \
+                f'Bug URL:\t{content.metadata["bug_url"]}\n' \
+                f'Summary:\n{content.summary}\n'

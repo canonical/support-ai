@@ -3,14 +3,14 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class Data:
-    Document: str
-    Metadata: dict
-    Id: str
+    document: str
+    metadata: dict
+    id: str
 
 @dataclass
 class Content:
-    Metadata: dict
-    Summary: str
+    metadata: dict
+    summary: str
 
 class Datasource(ABC):
     @abstractmethod

@@ -12,7 +12,7 @@ from lib.datasources.utils import get_datasources
 if __name__ == '__main__':
     with open(CONFIG_PATH, 'r', encoding='utf8') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    ds_updater = DSUpdater(get_datasources((config)))
+    ds_updater = DSUpdater(config)
 
     def signal_handler(*_):
         ds_updater.cancel_update_thread()

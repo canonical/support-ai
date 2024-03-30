@@ -2,6 +2,8 @@ import os
 import threading
 from datetime import datetime, timedelta
 from lib.const import META_DIR
+from lib.context import BaseContext
+from lib.datasources.utils import get_datasources
 from lib.vectorstore import VectorStore
 
 
@@ -14,10 +16,11 @@ class RepeatTimer(threading.Timer):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 
-class DSUpdater:
-    def __init__(self, datasources):
+class DSUpdater(BaseContext):
+    def __init__(self, config):
+        super().__init__(config)
         self.vector_store = VectorStore()
-        self.datasources = datasources
+        self.datasources = get_datasources(config)
         self.update_timer = RepeatTimer(TIMER_INTERVAL, self.__trigger_update)
         self.update_thread = threading.Thread(target=self.__update_data_worker)
         self.stop_update_thread = threading.Event()
