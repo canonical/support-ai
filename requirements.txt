@@ -1,6 +1,7 @@
 chromadb
 flask
 langchain
+langchain-community
 llama-cpp-python
 openai
 pymongo

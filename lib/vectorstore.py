@@ -1,5 +1,5 @@
 import os
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from lib.const import META_DIR
 
 VECTORDB_DIR = META_DIR + 'vectordb'

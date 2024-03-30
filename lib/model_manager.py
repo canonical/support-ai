@@ -3,14 +3,18 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-from langchain.embeddings import (
-    HuggingFaceEmbeddings,
-    LlamaCppEmbeddings,
-    OpenAIEmbeddings,
-)
-from langchain.llms import HuggingFacePipeline, LlamaCpp, OpenAI
 from langchain_community.chat_models import ChatOllama
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.llms import (
+        HuggingFacePipeline,
+        LlamaCpp,
+        OpenAI
+        )
+from langchain_community.embeddings import (
+        HuggingFaceEmbeddings,
+        LlamaCppEmbeddings,
+        OllamaEmbeddings,
+        OpenAIEmbeddings,
+        )
 from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_TYPE, CONFIG_MODEL, \
         CONFIG_LLM, CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, \
         CONFIG_OLLAMA, CONFIG_OPENAI, CONFIG_LLM_OPENAI_API_KEY
