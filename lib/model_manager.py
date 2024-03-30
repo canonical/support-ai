@@ -6,9 +6,11 @@ from langchain.embeddings import (
     OpenAIEmbeddings,
 )
 from langchain.llms import HuggingFacePipeline, LlamaCpp, OpenAI
+from langchain_community.chat_models import ChatOllama
+from langchain_community.embeddings import OllamaEmbeddings
 from lib.const import CONFIG_TYPE, CONFIG_LLM, CONFIG_EMBEDDINGS, \
         CONFIG_MODEL, CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, \
-        CONFIG_OPENAI, CONFIG_LLM_OPENAI_API_KEY
+        CONFIG_OLLAMA, CONFIG_OPENAI, CONFIG_LLM_OPENAI_API_KEY
 
 
 class LLMFactory(ABC):
@@ -46,6 +48,18 @@ class LlamaCppFactory(LLMFactory):
     def create_embeddings(self):
         return LlamaCppEmbeddings(model_path=self.model, n_ctx=4096)
 
+class OllamaFactory(LLMFactory):
+    def __init__(self, config):
+        self.model = config[CONFIG_MODEL]
+        if not self.model:
+            raise ValueError("Missing model in llm config")
+
+    def create_llm(self):
+        return ChatOllama(model=self.model)
+
+    def create_embeddings(self):
+        return OllamaEmbeddings(model=self.model)
+
 class OpenAIFactory(LLMFactory):
     def __init__(self, llm_config):
         self.model = llm_config[CONFIG_MODEL]
@@ -65,6 +79,7 @@ class OpenAIFactory(LLMFactory):
 _factories: dict = {
     CONFIG_HUGGINGFACE_PIPELINE: HuggingFaceFactory,
     CONFIG_LLAMACPP: LlamaCppFactory,
+    CONFIG_OLLAMA: OllamaFactory,
     CONFIG_OPENAI: OpenAIFactory
 }
 
