@@ -1,90 +1,19 @@
-"""Language model manager (LLM) and factory for LLMs and embeddings"""
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-from langchain_community.chat_models import ChatOllama
-from langchain_community.llms import (
-        HuggingFacePipeline,
-        LlamaCpp,
-        OpenAI
-        )
-from langchain_community.embeddings import (
-        HuggingFaceEmbeddings,
-        LlamaCppEmbeddings,
-        OllamaEmbeddings,
-        OpenAIEmbeddings,
-        )
-from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_TYPE, CONFIG_MODEL, \
-        CONFIG_LLM, CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, \
-        CONFIG_OLLAMA, CONFIG_OPENAI, CONFIG_LLM_OPENAI_API_KEY
+from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_TYPE, CONFIG_LLM, \
+        CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, \
+        CONFIG_OLLAMA, CONFIG_OPENAI
+from lib.model_manager.huggingface_factory import HuggingFaceFactory
+from lib.model_manager.llamacpp_factory import LlamaCppFactory
+from lib.model_manager.ollama_factory import OllamaFactory
+from lib.model_manager.openai_factory import OpenAIFactory
+
 
 LLM_CONFIG = 'llm_config'
 LLM_INST = 'llm_inst'
 EMBEDDINGS_INST = 'embeddings_inst'
 
-class ModelFactory(ABC):
-    @abstractmethod
-    def create_llm(self):
-        return NotImplemented
-
-    @abstractmethod
-    def create_embeddings(self):
-        return NotImplemented
-
-
-class HuggingFaceFactory(ModelFactory):
-    def __init__(self, llm_config):
-        self.model = llm_config[CONFIG_MODEL]
-        if not self.model:
-            raise ValueError("Missing model in llm config")
-
-    def create_llm(self):
-        return HuggingFacePipeline.from_model_id(model_id=self.model,
-                                                 task='text-generation')
-
-    def create_embeddings(self):
-        return HuggingFaceEmbeddings(model_name=self.model)
-
-class LlamaCppFactory(ModelFactory):
-    def __init__(self, llm_config):
-        self.model = llm_config[CONFIG_MODEL]
-        if not self.model:
-            raise ValueError("Missing model in llm config")
-
-    def create_llm(self):
-        return LlamaCpp(model_path=self.model, n_ctx=4096)
-
-    def create_embeddings(self):
-        return LlamaCppEmbeddings(model_path=self.model, n_ctx=4096)
-
-class OllamaFactory(ModelFactory):
-    def __init__(self, config):
-        self.model = config[CONFIG_MODEL]
-        if not self.model:
-            raise ValueError("Missing model in llm config")
-
-    def create_llm(self):
-        return ChatOllama(model=self.model)
-
-    def create_embeddings(self):
-        return OllamaEmbeddings(model=self.model)
-
-class OpenAIFactory(ModelFactory):
-    def __init__(self, llm_config):
-        self.model = llm_config[CONFIG_MODEL]
-        self.api_key = llm_config[CONFIG_LLM_OPENAI_API_KEY]
-        if not self.api_key:
-            raise ValueError("Missing api_key in llm config")
-
-    def create_llm(self):
-        return OpenAI(
-            openai_api_key=self.api_key,
-            model_name=self.model,
-        )
-
-    def create_embeddings(self) -> OpenAIEmbeddings:
-        return OpenAIEmbeddings(model=self.model, openai_api_key=self.api_key)
 
 def get_model(llm_config):
     __factories = {

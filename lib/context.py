@@ -1,4 +1,4 @@
-from lib.model_manager import ModelManager
+from lib.model_manager.model_manager import ModelManager
 
 
 class BaseContext:
