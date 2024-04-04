@@ -22,7 +22,10 @@ CONFIG_LLAMACPP = 'llamacpp'
 CONFIG_OPENAI = 'openai'
 CONFIG_HUGGINGFACE_PIPELINE = 'huggingface_pipeline'
 CONFIG_OLLAMA = 'ollama'
-# LLM OpemAI
+CONFIG_REMOTE = 'remote'
+# LLM OpenAI
 CONFIG_LLM_OPENAI_API_KEY = 'api_key'
+# LLM Remote
+CONFIG_LLM_REMOTE_URL = 'url'
 
 META_DIR = 'metadata/'

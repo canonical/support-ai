@@ -8,7 +8,7 @@ class OllamaFactory(ModelFactory):
     def __init__(self, config):
         self.model = config[CONFIG_MODEL]
         if not self.model:
-            raise ValueError("Missing model in llm config")
+            raise ValueError(f'Missing {CONFIG_MODEL} in llm config')
 
     def create_llm(self):
         return ChatOllama(model=self.model)

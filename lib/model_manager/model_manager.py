@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_TYPE, CONFIG_LLM, \
-        CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, CONFIG_LLAMACPP, \
-        CONFIG_OLLAMA, CONFIG_OPENAI
+from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_REMOTE, CONFIG_TYPE, \
+        CONFIG_LLM, CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, \
+        CONFIG_LLAMACPP, CONFIG_OLLAMA, CONFIG_OPENAI
 from lib.model_manager.huggingface_factory import HuggingFaceFactory
 from lib.model_manager.llamacpp_factory import LlamaCppFactory
 from lib.model_manager.ollama_factory import OllamaFactory
 from lib.model_manager.openai_factory import OpenAIFactory
+from lib.model_manager.remote_factory import RemoteFactory
 
 
 LLM_CONFIG = 'llm_config'
@@ -20,7 +21,8 @@ def get_model(llm_config):
             CONFIG_HUGGINGFACE_PIPELINE: HuggingFaceFactory,
             CONFIG_LLAMACPP: LlamaCppFactory,
             CONFIG_OLLAMA: OllamaFactory,
-            CONFIG_OPENAI: OpenAIFactory
+            CONFIG_OPENAI: OpenAIFactory,
+            CONFIG_REMOTE: RemoteFactory,
             }
     if CONFIG_TYPE not in llm_config:
         raise ValueError(f'The llm config doesn\'t contain {CONFIG_TYPE}')
