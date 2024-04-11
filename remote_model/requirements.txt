@@ -1,0 +1,5 @@
+kserve==0.10.0
+torch==1.13.0
+transformers==4.31.0
+sentencepiece
+sentence_transformers
