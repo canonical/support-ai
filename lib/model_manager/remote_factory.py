@@ -1,7 +1,7 @@
 import json
 import requests
 from typing import Any, List, Mapping, Optional
-from langchain.callbacks.manager import CallbackManagerForLLMRun
+from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
 from langchain_core.pydantic_v1 import BaseModel

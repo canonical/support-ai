@@ -1,9 +1,10 @@
 from operator import itemgetter
 from threading import Lock
-from langchain.memory import ConversationSummaryBufferMemory, MongoDBChatMessageHistory
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_community.chat_message_histories import MongoDBChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from lib.const import CONFIG_DB_CONNECTION
 
 class Memory:

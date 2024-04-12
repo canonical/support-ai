@@ -1,12 +1,11 @@
 from functools import partial
 from operator import itemgetter
-from langchain.callbacks.manager import trace_as_chain_group
+from langchain_core.callbacks.manager import trace_as_chain_group
 from langchain.chains.combine_documents import collapse_docs, split_list_of_docs
-from langchain.prompts import PromptTemplate
-from langchain.schema.document import Document
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.prompt_template import format_document
-from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
+from langchain_core.prompts import format_document, PromptTemplate
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
 
 document_prompt = PromptTemplate.from_template("{page_content}")
