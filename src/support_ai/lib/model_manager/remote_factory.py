@@ -5,8 +5,8 @@ from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
 from langchain_core.pydantic_v1 import BaseModel
-from lib.const import CONFIG_LLM_REMOTE_URL
-from lib.model_manager.model_factory import ModelFactory
+from ..const import CONFIG_LLM_REMOTE_URL
+from .model_factory import ModelFactory
 
 
 class RemoteLLM(LLM):

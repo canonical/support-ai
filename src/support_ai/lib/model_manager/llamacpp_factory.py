@@ -1,7 +1,7 @@
 from langchain_community.llms import LlamaCpp
 from langchain_community.embeddings import LlamaCppEmbeddings
-from lib.const import CONFIG_MODEL
-from lib.model_manager.model_factory import ModelFactory
+from ..const import CONFIG_MODEL
+from .model_factory import ModelFactory
 
 
 class LlamaCppFactory(ModelFactory):

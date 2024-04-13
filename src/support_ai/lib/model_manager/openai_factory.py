@@ -1,7 +1,7 @@
 from langchain_community.llms import OpenAI
 from langchain_community.embeddings import OpenAIEmbeddings
-from lib.const import CONFIG_MODEL, CONFIG_LLM_OPENAI_API_KEY
-from lib.model_manager.model_factory import ModelFactory
+from ..const import CONFIG_MODEL, CONFIG_LLM_OPENAI_API_KEY
+from .model_factory import ModelFactory
 
 
 class OpenAIFactory(ModelFactory):

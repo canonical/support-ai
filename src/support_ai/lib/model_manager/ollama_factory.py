@@ -1,7 +1,7 @@
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
-from lib.const import CONFIG_MODEL
-from lib.model_manager.model_factory import ModelFactory
+from ..const import CONFIG_MODEL
+from .model_factory import ModelFactory
 
 
 class OllamaFactory(ModelFactory):

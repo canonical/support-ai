@@ -1,10 +1,10 @@
 import os
 import threading
 from datetime import datetime, timedelta
-from lib.const import META_DIR
-from lib.context import BaseContext
-from lib.datasources.utils import get_datasources
-from lib.vectorstore import VectorStore
+from .const import META_DIR
+from .context import BaseContext
+from .vectorstore import VectorStore
+from .utils import get_datasources
 
 
 UPDATE_TIME = META_DIR + 'update_time'

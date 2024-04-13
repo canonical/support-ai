@@ -1,13 +1,14 @@
-#!/usr/bin/env python
-
+import pkgutil
 import yaml
 from flask import Flask, jsonify, request, Response
-from lib.const import CONFIG_PATH
-from lib.chain import Chain
+from .lib.const import CONFIG_FILE
+from .lib.chain import Chain
 
 app = Flask(__name__)
-with open(CONFIG_PATH, 'r', encoding='utf8') as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
+data = pkgutil.get_data(__package__, CONFIG_FILE)
+if data is None:
+    raise Exception(f'{CONFIG_FILE} doesn\'t exist in {__package__}')
+config = yaml.safe_load(data.decode('utf-8'))
 chain = Chain(config)
 
 @app.route('/ask_ai', methods=['POST'])
@@ -32,5 +33,9 @@ def clear_history():
     chain.clear_history(session)
     return jsonify(success=True)
 
-if __name__ == '__main__':
+def main():
     app.run(debug=True)
+
+
+if __name__ == '__main__':
+    main()

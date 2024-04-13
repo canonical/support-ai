@@ -5,7 +5,7 @@ from langchain_community.chat_message_histories import MongoDBChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from lib.const import CONFIG_DB_CONNECTION
+from .const import CONFIG_DB_CONNECTION
 
 class Memory:
     def __init__(self, config, llm):

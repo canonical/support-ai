@@ -1,7 +1,7 @@
-from lib.const import CONFIG_BASIC_MODEL, CONFIG_MEMORY
-from lib.context import BaseContext
-from lib.datasources.ds_querier import DSQuerier
-from lib.memory import Memory
+from .const import CONFIG_BASIC_MODEL, CONFIG_MEMORY
+from .context import BaseContext
+from .datasources.ds_querier import DSQuerier
+from .memory import Memory
 
 
 class Chain(BaseContext):

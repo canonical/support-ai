@@ -4,12 +4,12 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from lib.const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
+from ..const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
-from lib.context import BaseContext
-from lib.datasources.ds import Data, Content, Datasource
-from lib.utils.docs_chain import docs_map_reduce, docs_refine
-from lib.utils.lru import timed_lru_cache
+from ..context import BaseContext
+from ..utils.docs_chain import docs_map_reduce, docs_refine
+from ..utils.lru import timed_lru_cache
+from .ds import Data, Content, Datasource
 
 
 SYMPTOM_MAP_PROMPT = """Generate symptoms of the following:

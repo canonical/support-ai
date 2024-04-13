@@ -1,7 +1,7 @@
 from langchain_community.llms import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from lib.const import CONFIG_MODEL
-from lib.model_manager.model_factory import ModelFactory
+from ..const import CONFIG_MODEL
+from .model_factory import ModelFactory
 
 
 class HuggingFaceFactory(ModelFactory):

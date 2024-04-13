@@ -1,6 +1,6 @@
 import os
 from langchain_community.vectorstores import Chroma
-from lib.const import META_DIR
+from .const import META_DIR
 
 VECTORDB_DIR = META_DIR + 'vectordb'
 COLLECTION_METADATA = 'collection_metadata'

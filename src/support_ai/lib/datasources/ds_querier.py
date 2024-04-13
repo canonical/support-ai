@@ -1,10 +1,10 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from lib.const import CONFIG_BASIC_MODEL
-from lib.context import BaseContext
-from lib.datasources.utils import get_datasources
-from lib.vectorstore import VectorStore
+from ..const import CONFIG_BASIC_MODEL
+from ..context import BaseContext
+from ..vectorstore import VectorStore
+from .utils import get_datasources
 
 
 CLASSIFICATION_PROMPT = """Classify the question into salesforce or knowledgebase.

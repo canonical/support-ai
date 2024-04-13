@@ -1,0 +1,30 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "support_ai"
+authors = [{name = "Chengen Du", email = "chengen.du@canonical.com"}]
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+dynamic = ["version", "description"]
+dependencies = [
+  "chromadb",
+  "flask",
+  "langchain",
+  "langchain-community",
+  "llama-cpp-python",
+  "openai",
+  "pymongo",
+  "pyyaml",
+  "sentence-transformers",
+  "simple_salesforce",
+  "streamlit",
+  "torch",
+  "transformers",
+]
+
+[project.scripts]
+ai-bot = "support_ai.ai_bot:main"
+ds-updater = "support_ai.ds_updater:main"
+webserver = "support_ai.webserver:main"

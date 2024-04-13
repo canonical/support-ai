@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-from lib.const import CONFIG_LLMS, CONFIG_NAME, CONFIG_REMOTE, CONFIG_TYPE, \
+from ..const import CONFIG_LLMS, CONFIG_NAME, CONFIG_REMOTE, CONFIG_TYPE, \
         CONFIG_LLM, CONFIG_EMBEDDINGS, CONFIG_HUGGINGFACE_PIPELINE, \
         CONFIG_LLAMACPP, CONFIG_OLLAMA, CONFIG_OPENAI
-from lib.model_manager.huggingface_factory import HuggingFaceFactory
-from lib.model_manager.llamacpp_factory import LlamaCppFactory
-from lib.model_manager.ollama_factory import OllamaFactory
-from lib.model_manager.openai_factory import OpenAIFactory
-from lib.model_manager.remote_factory import RemoteFactory
+from .huggingface_factory import HuggingFaceFactory
+from .llamacpp_factory import LlamaCppFactory
+from .ollama_factory import OllamaFactory
+from .openai_factory import OpenAIFactory
+from .remote_factory import RemoteFactory
 
 
 LLM_CONFIG = 'llm_config'

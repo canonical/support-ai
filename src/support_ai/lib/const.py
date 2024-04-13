@@ -1,4 +1,4 @@
-CONFIG_PATH = 'config.yaml'
+CONFIG_FILE = 'config.yaml'
 CONFIG_LLMS = 'llms'
 CONFIG_NAME = 'name'
 CONFIG_TYPE = 'type'
