@@ -12,12 +12,14 @@ from ..utils.lru import timed_lru_cache
 from .ds import Data, Content, Datasource
 
 
-SYMPTOM_MAP_PROMPT = """Generate symptoms of the following:
+SYMPTOM_INITIAL_PROMPT = """Summarize symptom of the following content:
     "{context}"
-    SYMPTOMS:"""
-SYMPTOM_REDUCE_PROMPT = """Combine the symptoms:
+    SUMMARY:"""
+SYMPTOM_REFINE_PROMPT = """Here's the previous summary:
+    "{prev_context}"
+    Summarize symptom again with the following content
     "{context}"
-    SYMPTOMS:"""
+    SUMMARY:"""
 CONDENSE_INITIAL_PROMPT = """Summarize the following dialog:
     "{context}"
     SUMMARY:"""
@@ -96,7 +98,7 @@ class SalesforceSource(BaseContext, Datasource):
                 chunk_overlap=128,
                 )
         docs = splitter.create_documents([desc])
-        return docs_map_reduce(self.model.llm, docs, SYMPTOM_MAP_PROMPT, SYMPTOM_REDUCE_PROMPT)
+        return docs_refine(self.model.llm, docs, SYMPTOM_INITIAL_PROMPT, SYMPTOM_REFINE_PROMPT)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
