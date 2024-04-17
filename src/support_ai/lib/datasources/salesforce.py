@@ -29,19 +29,29 @@ CONDENSE_REFINE_PROMPT = """Here's the previous summary:
     Summarize again with the following dialog in detail:
     "{context}"
     SUMMARY:"""
-SOLUTION_JUDGEMENT_PROMPT = """Judge if the following comment has described root cause, solution or workaround:
-    The issue is mainly caused by the bug. // YES
-    The issue can be solved by the following approach. // YES
-    We can provide a workaround to bypass this issue. // YES
-    We are still working on this issue. // NO
-    "{context}" //
-"""
-SOLUTION_INITIAL_PROMPT = """Extract the root cause, workaround or solution from the following conversation:
+SOL_JUDGEMENT_PROMPT = """Judge if the following comment has described root cause, solution or workaround.
+    The ANS is either "YES" or "NO".
+
+    CONTEXT: "The issue is mainly caused by the bug."
+    ANS: YES
+
+    CONTEXT: "The issue can be solved by the following approach."
+    ANS: YES
+
+    CONTEXT: "We can provide a workaround to bypass this issue."
+    ANS: YES
+
+    CONTEXT: "We are still working on this issue."
+    ANS: NO
+
+    CONTEXT: "{context}"
+    ANS: """
+SOL_INITIAL_PROMPT = """Extract the root cause, workaround or solution from the following content in detail:
     "{context}"
     SOLUTION:"""
-SOLUTION_REFINE_PROMPT = """Here's the previous extracted context:
+SOL_REFINE_PROMPT = """Here's the previous extracted content:
     "{prev_context}"
-    Combine it with the following conversation:
+    Combine it with the following content in detail:
     "{context}"
     SOLUTION:"""
 
@@ -155,7 +165,7 @@ class SalesforceSource(BaseContext, Datasource):
         return re.sub('\s+', ' ', process_stmt).strip()
 
     def __get_solution(self, dialogs):
-        prompt = PromptTemplate.from_template(SOLUTION_JUDGEMENT_PROMPT)
+        prompt = PromptTemplate.from_template(SOL_JUDGEMENT_PROMPT)
         chain = (
                 {'context': RunnablePassthrough()}
                 | prompt
@@ -171,7 +181,7 @@ class SalesforceSource(BaseContext, Datasource):
         docs = []
         for comment in comments:
             docs.append(Document(page_content=comment))
-        return docs_refine(self.model.llm, docs, SOLUTION_INITIAL_PROMPT, SOLUTION_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, SOL_INITIAL_PROMPT, SOL_REFINE_PROMPT)
 
     @timed_lru_cache()
     def __get_summary(self, desc, dialogs):
