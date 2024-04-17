@@ -1,3 +1,4 @@
+import re
 import simple_salesforce
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
@@ -7,7 +8,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
         CONFIG_PASSWORD, CONFIG_TOKEN
 from ..context import BaseContext
-from ..utils.docs_chain import docs_map_reduce, docs_refine
+from ..utils.docs_chain import docs_refine
 from ..utils.lru import timed_lru_cache
 from .ds import Data, Content, Datasource
 
@@ -20,22 +21,14 @@ SYMPTOM_REFINE_PROMPT = """Here's the previous summary:
     Summarize symptom again with the following content
     "{context}"
     SUMMARY:"""
-CONDENSE_INITIAL_PROMPT = """Summarize the following dialog:
+CONDENSE_INITIAL_PROMPT = """Summarize the following dialog in detail:
     "{context}"
     SUMMARY:"""
 CONDENSE_REFINE_PROMPT = """Here's the previous summary:
     "{prev_context}"
-    Integrate it with the following dialog:
+    Summarize again with the following dialog in detail:
     "{context}"
     SUMMARY:"""
-TROUBLESHOOTING_PROCESS_INITIAL_PROMPT = """Integrate the following conversation:
-    "{context}"
-    CONVERSATION:"""
-TROUBLESHOOTING_PROCESS_REFINE_PROMPT = """Here's the previous integrated conversations:
-    "{prev_context}"
-    Integrate it with the following conversation:
-    "{context}"
-    CONVERSATION:"""
 SOLUTION_JUDGEMENT_PROMPT = """Judge if the following comment has described root cause, solution or workaround:
     The issue is mainly caused by the bug. // YES
     The issue can be solved by the following approach. // YES
@@ -51,6 +44,7 @@ SOLUTION_REFINE_PROMPT = """Here's the previous extracted context:
     Combine it with the following conversation:
     "{context}"
     SOLUTION:"""
+
 
 class Dialogs:
     def __init__(self):
@@ -137,18 +131,28 @@ class SalesforceSource(BaseContext, Datasource):
 
     def __condense_comments(self, comments):
         splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1536,
+                chunk_size=2048,
                 chunk_overlap=128,
                 length_function=len,
                 )
         docs = splitter.create_documents(comments)
         return docs_refine(self.model.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
 
-    def __get_troubleshooting_process(self, dialogs):
-        docs = []
+    def __get_process(self, dialogs):
+        condensed_comments = []
+        user = ''
+        comments = []
         for dialog in dialogs:
-            docs.append(Document(page_content=dialog['comment'], metadata={"user": dialog['user']}))
-        return docs_refine(self.model.llm, docs, TROUBLESHOOTING_PROCESS_INITIAL_PROMPT, TROUBLESHOOTING_PROCESS_REFINE_PROMPT)
+            if not user or user == dialog['user']:
+                user = dialog['user']
+                comments.append(dialog['comment'])
+                continue
+            condensed_comments.append(self.__condense_comments(comments))
+            user = dialog['user']
+            comments = [dialog['comment']]
+        condensed_comments.append(self.__condense_comments(comments))
+        process_stmt = ' '.join(condensed_comments).replace('\n', '')
+        return re.sub('\s+', ' ', process_stmt).strip()
 
     def __get_solution(self, dialogs):
         prompt = PromptTemplate.from_template(SOLUTION_JUDGEMENT_PROMPT)
@@ -171,22 +175,10 @@ class SalesforceSource(BaseContext, Datasource):
 
     @timed_lru_cache()
     def __get_summary(self, desc, dialogs):
-        condensed_dialogs = Dialogs()
-        user = ''
-        comments = []
-        for dialog in dialogs:
-            if not user or user == dialog['user']:
-                user = dialog['user']
-                comments.append(dialog['comment'])
-                continue
-            condensed_dialogs.append(user, self.__condense_comments(comments))
-            user = dialog['user']
-            comments = [dialog['comment']]
-        condensed_dialogs.append(user, self.__condense_comments(comments))
         return '\n'.join([
             self.__get_symptom(desc),
-            self.__get_troubleshooting_process(condensed_dialogs),
-            self.__get_solution(condensed_dialogs)
+            self.__get_process(dialogs),
+            self.__get_solution(dialogs)
             ])
 
     def get_content(self, metadata):
