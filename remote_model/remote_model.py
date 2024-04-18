@@ -23,7 +23,7 @@ class RemoteLlamaModel(Model):
             case 'inference':
                 for text in texts:
                     input_ids = self.tokenizer.encode(text, return_tensors="pt")
-                    generated_ids = self.inference_model.generate(input_ids, temperature=1, do_sample=False)
+                    generated_ids = self.inference_model.generate(input_ids, max_new_tokens=8192, temperature=1, do_sample=False)
                     output = self.tokenizer.batch_decode(generated_ids[:, input_ids.shape[1]:], skip_special_tokens=True)[0]
                     outputs.append(output)
             case 'embeddings':
