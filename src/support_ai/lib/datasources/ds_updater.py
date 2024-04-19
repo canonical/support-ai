@@ -1,9 +1,9 @@
 import os
 import threading
 from datetime import datetime, timedelta
-from .const import META_DIR
-from .context import BaseContext
-from .vectorstore import VectorStore
+from ..const import META_DIR
+from ..context import BaseContext
+from ..vectorstore import VectorStore
 from .utils import get_datasources
 
 
@@ -47,7 +47,7 @@ class DSUpdater(BaseContext):
                 if self.stop_update_thread.is_set():
                     return
                 self.vector_store.update(ds_type,
-                                         ds.model_manager.embeddings,
+                                         ds.model.embeddings,
                                          data)
         self.__save_next_update_date()
 
