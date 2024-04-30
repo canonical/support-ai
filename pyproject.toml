@@ -27,4 +27,4 @@ dependencies = [
 [project.scripts]
 ai-bot = "support_ai.ai_bot:main"
 ds-updater = "support_ai.ds_updater:main"
-webserver = "support_ai.webserver:main"
+api-server = "support_ai.api_server:main"
