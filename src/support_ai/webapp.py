@@ -21,6 +21,6 @@ if query:
             for token in response.iter_content():
                 st.session_state.content += "  \n" if token == b'\n' else token.decode('utf-8')
                 st.write(st.session_state.content)
-                time.sleep(1/10)
+                time.sleep(1/100)
     except requests.exceptions.RequestException as e:
         st.error(f"An error occurred: {e}")
