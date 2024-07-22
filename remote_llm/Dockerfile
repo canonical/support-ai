@@ -10,6 +10,6 @@ COPY requirements.txt $APP_HOME
 RUN pip install --no-cache-dir -r $APP_HOME/requirements.txt
 
 # Copy local code to container image
-COPY remote_model.py $APP_HOME
+COPY remote_llm.py $APP_HOME
 
-ENTRYPOINT ["python", "remote_model.py"]
+ENTRYPOINT ["python", "remote_llm.py"]

@@ -1,4 +1,4 @@
-import argparse
+import os
 
 from kserve import Model, ModelServer
 from sentence_transformers import SentenceTransformer
@@ -7,15 +7,15 @@ from typing import Dict
 
 
 class RemoteLlamaModel(Model):
-    def __init__(self, token):
+    def __init__(self):
         self.name = 'llama-model'
-        self.token = token
         super().__init__(self.name)
         self.load()
 
     def load(self):
-        self.tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf", token=self.token)
-        self.inference_model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-chat-hf", token=self.token)
+        token = os.getenv('TOKEN', '')
+        self.tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf", token=token)
+        self.inference_model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-chat-hf", token=token)
         self.embeddings_model = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1')
 
     async def predict(self, payload: Dict, headers: Dict[str, str] = None) -> Dict:
@@ -37,9 +37,6 @@ class RemoteLlamaModel(Model):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Remote model parameters.')
-    parser.add_argument('-t', '--token', type=str, help='Huggingface Llama2 access token', dest='token')
-    args = parser.parse_args()
-    model = RemoteLlamaModel(args.token)
+    model = RemoteLlamaModel()
     model_server = ModelServer(http_port=8080, workers=1)
     model_server.start([model])
