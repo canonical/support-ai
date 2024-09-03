@@ -1,0 +1,12 @@
+# Default values for remote_llm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 30300
+
+secret:
+  token: <-huggingface-access-token->

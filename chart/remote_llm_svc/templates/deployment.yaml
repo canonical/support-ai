@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remote-llm
+spec:
+  selector:
+    matchLabels:
+      app: remote-llm
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: remote-llm
+    spec:
+      containers:
+        - name: kserve-container
+          image: chengendu/remote_llm:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: remote-llm-secret
