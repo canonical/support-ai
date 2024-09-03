@@ -1,0 +1,29 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
+  labels:
+    access-kubeflow-minio: "true"
+    notebook-proxy: "true"
+    sidecar.istio.io/inject: "false"
+  name: remote-llm
+  namespace: chengen-du
+spec:
+  predictor:
+    containers:
+      - name: remote-llm-container
+        image: {{ .Values.container.image }}
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: {{ .Values.container.resources.limits.cpu }}
+            memory: {{ .Values.container.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.container.resources.requests.cpu }}
+            memory: {{ .Values.container.resources.requests.memory }}
+        ports:
+          - containerPort: 8080
+        envFrom:
+          - secretRef:
+              name: remote-llm-secret

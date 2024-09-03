@@ -1,0 +1,17 @@
+# Default values for remote_llm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+container:
+  image: chengendu/remote_llm:latest
+  resources:
+    limits:
+      cpu: 8
+      memory: 32G
+    requests:
+      cpu: 4
+      memory: 4G
+
+secret:
+  token: <-huggingface-access-token->
