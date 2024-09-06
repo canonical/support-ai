@@ -1,15 +1,11 @@
-import pkgutil
-import yaml
+import argparse
 from flask import Flask, jsonify, request, Response
-from .lib.const import CONFIG_FILE
 from .lib.chain import Chain
+from .utils import get_config
+
 
 app = Flask(__name__)
-data = pkgutil.get_data(__package__, CONFIG_FILE)
-if data is None:
-    raise Exception(f'{CONFIG_FILE} doesn\'t exist in {__package__}')
-config = yaml.safe_load(data.decode('utf-8'))
-chain = Chain(config)
+chain = None
 
 @app.route('/ask_ai', methods=['POST'])
 def ask_ai():
@@ -33,7 +29,17 @@ def clear_history():
     chain.clear_history(session)
     return jsonify(success=True)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Command line tool for support-ai')
+    parser.add_argument('--config', type=str, default=None, help='Config path')
+    return parser.parse_args()
+
 def main():
+    global chain
+    args = parse_args()
+    config = get_config(args.config)
+    chain = Chain(config)
+
     app.run(debug=True)
 
 

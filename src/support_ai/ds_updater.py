@@ -1,17 +1,19 @@
-import pkgutil
+import argparse
 import signal
 import sys
 import time
-import yaml
-from .lib.const import CONFIG_FILE
 from .lib.datasources.ds_updater import DSUpdater
+from .utils import get_config
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Command line tool for support-ai')
+    parser.add_argument('--config', type=str, default=None, help='Config path')
+    return parser.parse_args()
 
 def main():
-    data = pkgutil.get_data(__package__, CONFIG_FILE)
-    if data is None:
-        raise Exception(f'{CONFIG_FILE} doesn\'t exist in {__package__}')
-    config = yaml.safe_load(data.decode('utf-8'))
+    args = parse_args()
+    config = get_config(args.config)
     ds_updater = DSUpdater(config)
 
     def signal_handler(*_):
