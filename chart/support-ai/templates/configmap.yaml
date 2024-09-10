@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: support-ai-config
+data:
+  config.yaml: |
+{{- toYaml .Values.configMap | nindent 4 }}
