@@ -40,7 +40,7 @@ def main():
     config = get_config(args.config)
     chain = Chain(config)
 
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 
 
 if __name__ == '__main__':
