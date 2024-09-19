@@ -32,10 +32,8 @@ spec:
           {{- end }}
           command: ["{{ .Values.container.command }}"]
           args: ["--config", "/support-ai-config/config.yaml"]
-          {{- if .Values.container.port }}
           ports:
             - containerPort: {{ .Values.container.port }}
-          {{- end }}
           volumeMounts:
             - name: config-vol
               mountPath: /support-ai-config

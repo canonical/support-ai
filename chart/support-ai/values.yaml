@@ -11,8 +11,7 @@ container:
   port: 8080
 
 service:
-  type: NodePort
-  port: 30300
+  port: 8080
 
 configMap:
   llms:

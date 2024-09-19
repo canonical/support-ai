@@ -3,12 +3,10 @@ kind: Service
 metadata:
   name: support-ai
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   selector:
     app: support-ai
-  {{- if .Values.service.port }}
   ports:
     - protocol: TCP
       port: {{ .Values.service.port }}
       targetPort: {{ .Values.container.port }}
-  {{- end }}
