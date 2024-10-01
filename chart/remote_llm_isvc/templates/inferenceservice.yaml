@@ -8,7 +8,6 @@ metadata:
     notebook-proxy: "true"
     sidecar.istio.io/inject: "false"
   name: remote-llm
-  namespace: chengen-du
 spec:
   predictor:
     containers:
