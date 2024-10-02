@@ -17,18 +17,18 @@ spec:
           image: {{ .Values.container.image }}
           {{- if .Values.container.proxy }}
           env:
-          - name: HTTP_PROXY
-            value: {{ .Values.container.proxy }}
-          - name: http_proxy
-            value: {{ .Values.container.proxy }}
-          - name: HTTPS_PROXY
-            value: {{ .Values.container.proxy }}
-          - name: https_proxy
-            value: {{ .Values.container.proxy }}
-          - name: NO_PROXY
-            value: 127.0.0.1
-          - name: no_proxy
-            value: 127.0.0.1
+            - name: HTTP_PROXY
+              value: {{ .Values.container.proxy }}
+            - name: http_proxy
+              value: {{ .Values.container.proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.container.proxy }}
+            - name: https_proxy
+              value: {{ .Values.container.proxy }}
+            - name: NO_PROXY
+              value: 127.0.0.1
+            - name: no_proxy
+              value: 127.0.0.1
           {{- end }}
           command: ["{{ .Values.container.command }}"]
           args: ["--config", "/support-ai-config/config.yaml"]
