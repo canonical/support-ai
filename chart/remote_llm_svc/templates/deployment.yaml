@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: kserve-container
-          image: chengendu/remote_llm:latest
+          image: {{ .Values.container.image }}
           ports:
             - containerPort: 8080
           envFrom:

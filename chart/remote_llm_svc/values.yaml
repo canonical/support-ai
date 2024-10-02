@@ -4,6 +4,9 @@
 
 replicaCount: 1
 
+container:
+  image: chengendu/remote_llm:latest
+
 service:
   type: NodePort
   port: 30300
