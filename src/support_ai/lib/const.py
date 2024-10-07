@@ -27,5 +27,7 @@ CONFIG_REMOTE = 'remote'
 CONFIG_LLM_OPENAI_API_KEY = 'api_key'
 # LLM Remote
 CONFIG_LLM_REMOTE_URL = 'url'
+CONFIG_LLM_REMOTE_TOKEN = 'token'
+CONFIG_LLM_REMOTE_HOSTNAME = 'hostname'
 
 META_DIR = 'metadata/'
