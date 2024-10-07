@@ -20,6 +20,17 @@ def ask_ai():
     except ValueError:
         return 'Service unavailable', 400
 
+@app.route('/summarize_case', methods=['POST'])
+def summarize_case():
+    case_number = request.form.get('case_number')
+
+    if case_number is None:
+        return 'Case number not specified', 400
+    try:
+        return Response(chain.summarize_case(case_number), mimetype='text/plain')
+    except ValueError:
+        return 'Service unavailable', 400
+
 @app.route('/clear_history', methods=['POST'])
 def clear_history():
     session = request.form.get('session')

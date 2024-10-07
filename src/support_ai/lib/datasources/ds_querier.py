@@ -44,7 +44,7 @@ class DSQuerier(BaseContext):
             return list(self.datasources.keys())[0]
         return ds_type
 
-    def __get_ds(self, ds_type):
+    def get_ds(self, ds_type):
         if ds_type not in self.datasources:
             raise ValueError(f'Unknown datasource type: {ds_type}')
         return self.datasources[ds_type]
@@ -52,7 +52,7 @@ class DSQuerier(BaseContext):
     def query(self, query, ds_type=None):
         if ds_type is None:
             ds_type = self.__judge_ds_type(query)
-        ds = self.__get_ds(ds_type)
+        ds = self.get_ds(ds_type)
         docs = self.vector_store.similarity_search(ds_type,
                                                   ds.model_manager.embeddings,
                                                   query)

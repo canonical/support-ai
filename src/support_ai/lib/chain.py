@@ -1,4 +1,4 @@
-from .const import CONFIG_BASIC_MODEL, CONFIG_MEMORY
+from .const import CONFIG_BASIC_MODEL, CONFIG_MEMORY, CONFIG_SF
 from .context import BaseContext
 from .datasources.ds_querier import DSQuerier
 from .memory import Memory
@@ -29,6 +29,10 @@ class Chain(BaseContext):
         if session is not None and self.memory is not None:
             content.summary = self.memory.integrate(session, query, content.Summary)
         return self.__stream(ds.generate_output(content))
+
+    def summarize_case(self, case_number):
+        ds = self.ds_querier.get_ds(CONFIG_SF)
+        return self.__stream(ds.summarize_case(case_number))
 
     def clear_history(self, session):
         if self.memory is None:

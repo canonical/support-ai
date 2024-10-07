@@ -124,7 +124,7 @@ class SalesforceSource(BaseContext, Datasource):
                 continue
             yield Data(
                     self.__get_symptom(case['Description']),
-                    {'id': case['Id'], 'subject': case['Subject']},
+                    {'case_number': case['CaseNumber'], 'subject': case['Subject']},
                     case['CaseNumber']
                     )
 
@@ -191,11 +191,11 @@ class SalesforceSource(BaseContext, Datasource):
             self.__get_solution(dialogs)
             ])
 
-    def get_content(self, metadata):
-        case = self.sf.query_all(f'SELECT Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
-                                 f'WHERE Id = \'{metadata["id"]}\'')['records'][0]
+    def __get_content(self, case_number):
+        case = self.sf.query_all(f'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
+                                 f'WHERE CaseNumber = \'{case_number}\'')['records'][0]
         records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
-                                     f'WHERE ParentId = \'{metadata["id"]}\' AND IsPublished = True '
+                                     f'WHERE ParentId = \'{case["Id"]}\' AND IsPublished = True '
                                      f'ORDER BY LastModifiedDate')
         dialogs = self.__translate_into_dialogs(records['records'])
         return Content(
@@ -208,9 +208,15 @@ class SalesforceSource(BaseContext, Datasource):
                 self.__get_summary(case['Description'], dialogs)
                 )
 
+    def get_content(self, metadata):
+        return self.__get_content(metadata['case_number'])
+
     def generate_output(self, content):
         return f'Case:\t\t{content.metadata["case_number"]}\n' \
                 f'Status:\t\t{content.metadata["status"]}\n' \
                 f'Severity Level:\t{content.metadata["sev_lv"]}\n' \
                 f'Bug URL:\t{content.metadata["bug_url"]}\n' \
                 f'Summary:\n{content.summary}\n'
+
+    def summarize_case(self, case_number):
+        return self.__get_content(case_number)
