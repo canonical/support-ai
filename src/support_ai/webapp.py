@@ -1,18 +1,19 @@
+import os
 import streamlit as st
 import time
 import requests
 
-WEBSERVER_URL = 'http://127.0.0.1:5000/'
 
 st.title('Support AI')
 
-query = st.text_area(label='Query',
-                     placeholder='Please describe the symptom you experienced.',
+api_svc_url = os.getenv('API_SVC_URL', '')
+case_number = st.text_area(label='CaseNumber',
+                     placeholder='Please provide the case number.',
                      label_visibility='hidden')
 
-if query:
-    url = WEBSERVER_URL + 'ask_ai'
-    data = {'query': query}
+if case_number:
+    url = api_svc_url + 'summarize_case'
+    data = {'case_number': case_number}
 
     st.session_state.content = ''
     try:
