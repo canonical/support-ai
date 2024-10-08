@@ -1,13 +1,14 @@
 import argparse
-from flask import Flask, jsonify, request, Response
+from flask import Blueprint, Flask, jsonify, request, Response
 from .lib.chain import Chain
 from .utils import get_config
 
 
 app = Flask(__name__)
 chain = None
+api_blueprint = Blueprint('api', __name__)
 
-@app.route('/ask_ai', methods=['POST'])
+@api_blueprint.route('/ask_ai', methods=['POST'])
 def ask_ai():
     query = request.form.get('query')
     datasource = request.form.get('datasource')
@@ -20,7 +21,7 @@ def ask_ai():
     except ValueError:
         return 'Service unavailable', 400
 
-@app.route('/summarize_case', methods=['POST'])
+@api_blueprint.route('/summarize_case', methods=['POST'])
 def summarize_case():
     case_number = request.form.get('case_number')
 
@@ -31,7 +32,7 @@ def summarize_case():
     except ValueError:
         return 'Service unavailable', 400
 
-@app.route('/clear_history', methods=['POST'])
+@api_blueprint.route('/clear_history', methods=['POST'])
 def clear_history():
     session = request.form.get('session')
 
@@ -51,6 +52,7 @@ def main():
     config = get_config(args.config)
     chain = Chain(config)
 
+    app.register_blueprint(api_blueprint, url_prefix='/api')
     app.run(host='0.0.0.0', port=8080, debug=True)
 
 
