@@ -1,39 +1,38 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: support-ai
+  name: support-ai-api
 spec:
   selector:
     matchLabels:
-      app: support-ai
-  replicas: {{ .Values.replicaCount }}
+      app: support-ai-api
   template:
     metadata:
       labels:
-        app: support-ai
+        app: support-ai-api
     spec:
       containers:
-        - name: support-ai-container
+        - name: support-ai-api-container
           image: {{ .Values.container.image }}
-          {{- if .Values.container.proxy }}
+          {{- if .Values.container.api.proxy }}
           env:
             - name: HTTP_PROXY
-              value: {{ .Values.container.proxy }}
+              value: {{ .Values.container.api.proxy }}
             - name: http_proxy
-              value: {{ .Values.container.proxy }}
+              value: {{ .Values.container.api.proxy }}
             - name: HTTPS_PROXY
-              value: {{ .Values.container.proxy }}
+              value: {{ .Values.container.api.proxy }}
             - name: https_proxy
-              value: {{ .Values.container.proxy }}
+              value: {{ .Values.container.api.proxy }}
             - name: NO_PROXY
               value: 127.0.0.1
             - name: no_proxy
               value: 127.0.0.1
           {{- end }}
-          command: ["{{ .Values.container.command }}"]
+          command: ["api-server"]
           args: ["--config", "/support-ai-config/config.yaml"]
           ports:
-            - containerPort: {{ .Values.container.port }}
+            - containerPort: {{ .Values.container.api.port }}
           volumeMounts:
             - name: config-vol
               mountPath: /support-ai-config
@@ -41,3 +40,27 @@ spec:
         - name: config-vol
           configMap:
             name: support-ai-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: support-ai-webapp
+spec:
+  selector:
+    matchLabels:
+      app: support-ai-webapp
+  template:
+    metadata:
+      labels:
+        app: support-ai-webapp
+    spec:
+      containers:
+        - name: support-ai-webapp-container
+          image: {{ .Values.container.image }}
+          env:
+            - name: API_SVC_URL
+              value: http://support-ai-api:{{ .Values.service.api.port }}/api/
+          command: ["streamlit", "run", "/app/src/support_ai/webapp.py"]
+          args: ["--server.port", "{{ .Values.container.webapp.port }}", "--server.baseUrlPath", "/webapp"]
+          ports:
+            - containerPort: {{ .Values.container.webapp.port }}

@@ -2,22 +2,27 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
 container:
   image: chengendu/support-ai:latest
-  proxy: http://squid.internal:3128
-  command: api-server
-  port: 8080
+  api:
+    proxy: http://squid.internal:3128
+    port: 8080
+  webapp:
+    port: 8081
 
 service:
-  port: 8080
+  api:
+    port: 8080
+  webapp:
+    port: 8081
 
 configMap:
   llms:
   - name: default_llm
     type: remote
-    url: test
+    url: ""
+    token: ""
+    hostname: ""
   basic_model:
     llm: default_llm
   datasources:

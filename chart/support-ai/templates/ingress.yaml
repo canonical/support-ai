@@ -8,10 +8,17 @@ spec:
     - host: support-ai.stage.support-eng.internal
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
-                name: support-ai
+                name: support-ai-api
                 port:
-                  number: {{ .Values.service.port }}
+                  number: {{ .Values.service.api.port }}
+          - path: /webapp
+            pathType: Prefix
+            backend:
+              service:
+                name: support-ai-webapp
+                port:
+                  number: {{ .Values.service.webapp.port }}
