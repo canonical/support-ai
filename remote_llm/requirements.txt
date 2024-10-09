@@ -1,5 +1,7 @@
-kserve==0.10.0
-torch==1.13.0
-transformers==4.31.0
+accelerate==1.0.0
+bitsandbytes==0.44.1
+kserve==0.13.1
+torch==2.4.1
+transformers==4.45.2
 sentencepiece
 sentence_transformers
