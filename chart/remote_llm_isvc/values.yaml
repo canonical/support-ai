@@ -2,16 +2,17 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-
 container:
-  image: chengendu/remote_llm:latest
+  image: chengendu/remote-llm:latest
   resources:
     limits:
       cpu: 8
       memory: 32G
+      nvidia_gpu: 1
     requests:
       cpu: 4
       memory: 4G
+      nvidia_gpu: 1
 
 secret:
   token: <-huggingface-access-token->
