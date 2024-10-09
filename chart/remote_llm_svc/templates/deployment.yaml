@@ -6,7 +6,6 @@ spec:
   selector:
     matchLabels:
       app: remote-llm
-  replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
@@ -15,6 +14,20 @@ spec:
       containers:
         - name: kserve-container
           image: {{ .Values.container.image }}
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: {{ .Values.container.resources.limits.cpu }}
+              memory: {{ .Values.container.resources.limits.memory }}
+              {{- if .Values.container.resources.limits.nvidia_gpu }}
+              nvidia.com/gpu: {{ .Values.container.resources.limits.nvidia_gpu }}
+              {{- end }}
+            requests:
+              cpu: {{ .Values.container.resources.requests.cpu }}
+              memory: {{ .Values.container.resources.requests.memory }}
+              {{- if .Values.container.resources.requests.nvidia_gpu }}
+              nvidia.com/gpu: {{ .Values.container.resources.requests.nvidia_gpu }}
+              {{- end }}
           ports:
             - containerPort: 8080
           envFrom:
