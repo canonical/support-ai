@@ -4,7 +4,7 @@ from typing import Any, List, Mapping, Optional
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from ..const import CONFIG_LLM_REMOTE_HOSTNAME, CONFIG_LLM_REMOTE_TOKEN, CONFIG_LLM_REMOTE_URL
 from .model_factory import ModelFactory
 
