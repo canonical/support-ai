@@ -5,3 +5,4 @@ torch==2.4.1
 transformers==4.45.2
 sentencepiece
 sentence_transformers
+pyyaml

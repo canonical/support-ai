@@ -28,8 +28,16 @@ spec:
               {{- if .Values.container.resources.requests.nvidia_gpu }}
               nvidia.com/gpu: {{ .Values.container.resources.requests.nvidia_gpu }}
               {{- end }}
+          args: ["--model_config", "/remote-llm-config/config.yaml"]
           ports:
             - containerPort: 8080
           envFrom:
             - secretRef:
                 name: remote-llm-secret
+          volumeMounts:
+            - name: config-vol
+              mountPath: /remote-llm-config
+      volumes:
+        - name: config-vol
+          configMap:
+            name: remote-llm-config

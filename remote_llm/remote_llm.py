@@ -1,6 +1,8 @@
+import argparse
 import logging
 import os
 import torch
+import yaml
 
 from kserve import Model, ModelServer
 from sentence_transformers import SentenceTransformer
@@ -8,21 +10,25 @@ from transformers import LlamaForCausalLM, LlamaTokenizer
 from typing import Dict, List, Optional
 
 
-class RemoteLlamaModel(Model):
-    def __init__(self):
-        super().__init__('llama-model')
-        self.load()
+CONFIG_INFERENCE_MODEL_PATH = 'inference_model_path'
 
-    def load(self):
+class RemoteLlamaModel(Model):
+    def __init__(self, config):
+        super().__init__('llama-model')
+        self.load(config)
+
+    def load(self, config):
+        if CONFIG_INFERENCE_MODEL_PATH not in config:
+            raise ValueError(f'The config doesn\'t contain {CONFIG_INFERENCE_MODEL_PATH}')
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.token = os.getenv('TOKEN', '')
         try:
             logging.info("Loading Llama tokenizer and model...")
             self.tokenizer = LlamaTokenizer.from_pretrained(
-                "meta-llama/Llama-2-7b-chat-hf", token=self.token
+                config[CONFIG_INFERENCE_MODEL_PATH], token=self.token
             )
             self.inference_model = LlamaForCausalLM.from_pretrained(
-                "meta-llama/Llama-2-7b-chat-hf", token=self.token, device_map='auto', load_in_4bit=True
+                config[CONFIG_INFERENCE_MODEL_PATH], token=self.token, device_map='auto', load_in_4bit=True
             )
 
             logging.info("Loading Sentence Transformer embeddings model...")
@@ -69,9 +75,24 @@ class RemoteLlamaModel(Model):
     def __generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         return [self.embeddings_model.encode(text).tolist() for text in texts]
 
+def get_model_config(path):
+    config = None
+    with open(path) as stream:
+        config = yaml.safe_load(stream)
+    return config
 
-if __name__ == "__main__":
+def parse_args():
+    parser = argparse.ArgumentParser(description='remote-llm')
+    parser.add_argument('--model_config', type=str, default='config.yaml', help='Config path')
+    return parser.parse_args()
+
+def main():
     logging.basicConfig(level=logging.INFO)
-    model = RemoteLlamaModel()
+    args = parse_args()
+    config = get_model_config(args.model_config)
+    model = RemoteLlamaModel(config)
     model_server = ModelServer(http_port=8080, workers=1)
     model_server.start([model])
+
+if __name__ == "__main__":
+    main()

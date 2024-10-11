@@ -14,5 +14,8 @@ container:
       memory: 4G
       nvidia_gpu: 1
 
+configMap:
+  inference_model_path: meta-llama/Llama-2-7b-chat-hf
+
 secret:
   token: <-huggingface-access-token->

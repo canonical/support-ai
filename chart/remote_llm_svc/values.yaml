@@ -18,5 +18,8 @@ service:
   type: NodePort
   port: 30300
 
+configMap:
+  inference_model_path: meta-llama/Llama-2-7b-chat-hf
+
 secret:
   token: <-huggingface-access-token->

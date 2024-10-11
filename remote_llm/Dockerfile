@@ -9,3 +9,4 @@ RUN apt update && apt install -y python3 python3-pip
 RUN pip install --no-cache-dir -r $APP_HOME/requirements.txt
 
 ENTRYPOINT ["python3", "remote_llm.py"]
+CMD ["--model_config", "config.yaml"]
