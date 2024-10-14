@@ -10,6 +10,7 @@ from ..const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
 from ..context import BaseContext
 from ..utils.docs_chain import docs_refine
 from ..utils.lru import timed_lru_cache
+from ..utils.parallel_executor import run_fn_in_parallel, run_in_parallel
 from .ds import Data, Content, Datasource
 
 
@@ -139,32 +140,35 @@ class SalesforceSource(BaseContext, Datasource):
             dialogs.append(firstname, comment["CommentBody"])
         return dialogs
 
-    def __condense_comments(self, comments):
+    @run_in_parallel(parallelism=4)
+    def __condense_context(self, context):
         splitter = RecursiveCharacterTextSplitter(
                 chunk_size=2048,
                 chunk_overlap=128,
                 length_function=len,
                 )
-        docs = splitter.create_documents(comments)
+        docs = splitter.create_documents(context)
         return docs_refine(self.model.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
 
     def __get_process(self, dialogs):
-        condensed_comments = []
         user = ''
-        comments = []
+        contexts = []
+        context = []
         for dialog in dialogs:
             if not user or user == dialog['user']:
                 user = dialog['user']
-                comments.append(dialog['comment'])
+                context.append(dialog['comment'])
                 continue
-            condensed_comments.append(self.__condense_comments(comments))
+            contexts.append((context))
             user = dialog['user']
-            comments = [dialog['comment']]
-        condensed_comments.append(self.__condense_comments(comments))
-        process_stmt = ' '.join(condensed_comments).replace('\n', '')
+            context = [dialog['comment']]
+        contexts.append((context))
+        condensed_contexts = self.__condense_context(contexts)
+        process_stmt = ' '.join(condensed_contexts).replace('\n', '')
         return re.sub('\s+', ' ', process_stmt).strip()
 
-    def __get_solution(self, dialogs):
+    @run_in_parallel(parallelism=4)
+    def __judge_comment(self, comment):
         prompt = PromptTemplate.from_template(SOL_JUDGEMENT_PROMPT)
         chain = (
                 {'context': RunnablePassthrough()}
@@ -172,24 +176,31 @@ class SalesforceSource(BaseContext, Datasource):
                 | self.model.llm
                 | StrOutputParser()
                 )
+        result = chain.invoke(comment)
+        return comment if result != 'NO' else None
+
+    def __get_solution(self, dialogs):
         comments = []
         for dialog in dialogs:
-            result = chain.invoke(dialog['comment'])
-            if result != 'NO':
-                comments.append(dialog['comment'])
+            comments.append((dialog['comment']))
+        filtered_comments = self.__judge_comment(comments)
 
+        if filtered_comments is None:
+            return 'A solution cannot be summarized from the case comments.'
         docs = []
-        for comment in comments:
-            docs.append(Document(page_content=comment))
+        for comment in filtered_comments:
+            if comment is not None:
+                docs.append(Document(page_content=comment))
         return docs_refine(self.model.llm, docs, SOL_INITIAL_PROMPT, SOL_REFINE_PROMPT)
 
     @timed_lru_cache()
     def __get_summary(self, desc, dialogs):
-        return '\n'.join([
-            self.__get_symptom(desc),
-            self.__get_process(dialogs),
-            self.__get_solution(dialogs)
-            ])
+        fn_args = [
+            (self.__get_symptom, (desc)),
+            (self.__get_process, (dialogs)),
+            (self.__get_solution, (dialogs))
+            ]
+        return '\n'.join(run_fn_in_parallel(fn_args, 3))
 
     def __get_content(self, case_number):
         case = self.sf.query_all(f'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
