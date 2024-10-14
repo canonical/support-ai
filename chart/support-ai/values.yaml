@@ -6,6 +6,7 @@ container:
   image: chengendu/support-ai:latest
   api:
     proxy: http://squid.internal:3128
+    no_proxy: 10.141.2.39
     port: 8080
   webapp:
     port: 8081

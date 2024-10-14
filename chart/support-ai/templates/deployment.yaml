@@ -14,8 +14,9 @@ spec:
       containers:
         - name: support-ai-api-container
           image: {{ .Values.container.image }}
-          {{- if .Values.container.api.proxy }}
+          {{- if or .Values.container.api.proxy .Values.container.api.no_proxy }}
           env:
+            {{- if .Values.container.api.proxy }}
             - name: HTTP_PROXY
               value: {{ .Values.container.api.proxy }}
             - name: http_proxy
@@ -24,10 +25,13 @@ spec:
               value: {{ .Values.container.api.proxy }}
             - name: https_proxy
               value: {{ .Values.container.api.proxy }}
+            {{- end }}
+            {{- if .Values.container.api.no_proxy }}
             - name: NO_PROXY
-              value: 127.0.0.1
+              value: {{ .Values.container.api.no_proxy }}
             - name: no_proxy
-              value: 127.0.0.1
+              value: {{ .Values.container.api.no_proxy }}
+            {{- end }}
           {{- end }}
           command: ["api-server"]
           args: ["--config", "/support-ai-config/config.yaml"]
