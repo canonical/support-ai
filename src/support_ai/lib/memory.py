@@ -5,13 +5,14 @@ from langchain_community.chat_message_histories import MongoDBChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from .const import CONFIG_DB_CONNECTION
+from . import const as const
+
 
 class Memory:
     def __init__(self, config, llm):
-        if CONFIG_DB_CONNECTION not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_DB_CONNECTION}')
-        self.db_connection = config[CONFIG_DB_CONNECTION]
+        if const.CONFIG_DB_CONNECTION not in config:
+            raise ValueError(f'The config doesn\'t contain {const.CONFIG_DB_CONNECTION}')
+        self.db_connection = config[const.CONFIG_DB_CONNECTION]
         self.llm = llm
         self.mutex = Lock()
         self.session_memories = {}

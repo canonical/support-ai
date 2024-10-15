@@ -1,4 +1,4 @@
-from .const import CONFIG_BASIC_MODEL, CONFIG_MEMORY, CONFIG_SF
+from . import const as const
 from .context import BaseContext
 from .datasources.ds_querier import DSQuerier
 from .memory import Memory
@@ -7,10 +7,10 @@ from .memory import Memory
 class Chain(BaseContext):
     def __init__(self, config):
         super().__init__(config)
-        if CONFIG_BASIC_MODEL not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_BASIC_MODEL}')
-        self.model = self.model_manager.get_model(config[CONFIG_BASIC_MODEL])
-        self.memory = Memory(config[CONFIG_MEMORY], self.model.llm) if CONFIG_MEMORY in config else None
+        if const.CONFIG_BASIC_MODEL not in config:
+            raise ValueError(f'The config doesn\'t contain {const.CONFIG_BASIC_MODEL}')
+        self.model = self.model_manager.get_model(config[const.CONFIG_BASIC_MODEL])
+        self.memory = Memory(config[const.CONFIG_MEMORY], self.model.llm) if const.CONFIG_MEMORY in config else None
         self.ds_querier = DSQuerier(config)
 
     def __stream(self, output):

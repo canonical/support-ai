@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from ..const import CONFIG_BASIC_MODEL
+from .. import const as const
 from ..context import BaseContext
 from ..vectorstore import VectorStore
 from .utils import get_datasources
@@ -23,9 +23,9 @@ Answer:"""
 class DSQuerier(BaseContext):
     def __init__(self, config):
         super().__init__(config)
-        if CONFIG_BASIC_MODEL not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_BASIC_MODEL}')
-        self.model = self.model_manager.get_model(config[CONFIG_BASIC_MODEL])
+        if const.CONFIG_BASIC_MODEL not in config:
+            raise ValueError(f'The config doesn\'t contain {const.CONFIG_BASIC_MODEL}')
+        self.model = self.model_manager.get_model(config[const.CONFIG_BASIC_MODEL])
         self.datasources = get_datasources(config)
         self.vector_store = VectorStore()
 

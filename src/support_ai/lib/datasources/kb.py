@@ -4,8 +4,7 @@ from io import StringIO
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from ..const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
-        CONFIG_PASSWORD, CONFIG_TOKEN
+from .. import const as const
 from ..context import BaseContext
 from ..utils.lru import timed_lru_cache
 from .ds import Data, Content, Datasource
@@ -38,24 +37,24 @@ def strip_tags(html):
     return stripper.get_data()
 
 def get_authentication(auth_config):
-    if CONFIG_USERNAME not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_USERNAME}')
-    if CONFIG_PASSWORD not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_PASSWORD}')
-    if CONFIG_TOKEN not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_TOKEN}')
+    if const.CONFIG_USERNAME not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_USERNAME}')
+    if const.CONFIG_PASSWORD not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_PASSWORD}')
+    if const.CONFIG_TOKEN not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_TOKEN}')
     return {
-            'username': auth_config[CONFIG_USERNAME],
-            'password': auth_config[CONFIG_PASSWORD],
-            'security_token': auth_config[CONFIG_TOKEN]
+            'username': auth_config[const.CONFIG_USERNAME],
+            'password': auth_config[const.CONFIG_PASSWORD],
+            'security_token': auth_config[const.CONFIG_TOKEN]
             }
 
 class KnowledgeBaseSource(BaseContext, Datasource):
     def __init__(self, config):
         super().__init__(config)
-        if CONFIG_AUTHENTICATION not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_AUTHENTICATION}')
-        auth = get_authentication(config[CONFIG_AUTHENTICATION])
+        if const.CONFIG_AUTHENTICATION not in config:
+            raise ValueError(f'The config doesn\'t contain {const.CONFIG_AUTHENTICATION}')
+        auth = get_authentication(config[const.CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
         self.model = self.model_manager.get_model(config)
 
