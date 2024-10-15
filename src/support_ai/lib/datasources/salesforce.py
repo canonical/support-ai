@@ -5,8 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from ..const import CONFIG_AUTHENTICATION, CONFIG_USERNAME, \
-        CONFIG_PASSWORD, CONFIG_TOKEN
+from .. import const as const
 from ..context import BaseContext
 from ..utils.docs_chain import docs_refine
 from ..utils.lru import timed_lru_cache
@@ -75,25 +74,25 @@ class Dialogs:
 
 
 def get_authentication(auth_config):
-    if CONFIG_USERNAME not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_USERNAME}')
-    if CONFIG_PASSWORD not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_PASSWORD}')
-    if CONFIG_TOKEN not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {CONFIG_TOKEN}')
+    if const.CONFIG_USERNAME not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_USERNAME}')
+    if const.CONFIG_PASSWORD not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_PASSWORD}')
+    if const.CONFIG_TOKEN not in auth_config:
+        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_TOKEN}')
     return {
-            'username': auth_config[CONFIG_USERNAME],
-            'password': auth_config[CONFIG_PASSWORD],
-            'security_token': auth_config[CONFIG_TOKEN]
+            'username': auth_config[const.CONFIG_USERNAME],
+            'password': auth_config[const.CONFIG_PASSWORD],
+            'security_token': auth_config[const.CONFIG_TOKEN]
             }
 
 
 class SalesforceSource(BaseContext, Datasource):
     def __init__(self, config):
         super().__init__(config)
-        if CONFIG_AUTHENTICATION not in config:
-            raise ValueError(f'The config doesn\'t contain {CONFIG_AUTHENTICATION}')
-        auth = get_authentication(config[CONFIG_AUTHENTICATION])
+        if const.CONFIG_AUTHENTICATION not in config:
+            raise ValueError(f'The config doesn\'t contain {const.CONFIG_AUTHENTICATION}')
+        auth = get_authentication(config[const.CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
         self.model = self.model_manager.get_model(config)
 
@@ -222,12 +221,18 @@ class SalesforceSource(BaseContext, Datasource):
     def get_content(self, metadata):
         return self.__get_content(metadata['case_number'])
 
+    def custom_api(self, action, data):
+        match action:
+            case const.SUMMARIZE_CASE:
+                if const.CASE_NUMBER not in data:
+                    raise ValueError(f'The {const.CASE_NUMBER} is missing from the data for the {action} action')
+                return self.__get_content(data[const.CASE_NUMBER])
+            case _:
+                raise ValueError(f'The {action} action is not implemented.')
+
     def generate_output(self, content):
         return f'Case:\t\t{content.metadata["case_number"]}\n' \
                 f'Status:\t\t{content.metadata["status"]}\n' \
                 f'Severity Level:\t{content.metadata["sev_lv"]}\n' \
                 f'Bug URL:\t{content.metadata["bug_url"]}\n' \
                 f'Summary:\n{content.summary}\n'
-
-    def summarize_case(self, case_number):
-        return self.__get_content(case_number)

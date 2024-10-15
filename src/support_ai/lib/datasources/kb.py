@@ -115,6 +115,9 @@ class KnowledgeBaseSource(BaseContext, Datasource):
                 {},
                 self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
                 )
+    
+    def custom_api(self, action, data):
+        raise ValueError(f'The {action} action is not implemented.')
 
     def generate_output(self, content):
         return content.summary

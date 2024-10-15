@@ -30,9 +30,10 @@ class Chain(BaseContext):
             content.summary = self.memory.integrate(session, query, content.Summary)
         return self.__stream(ds.generate_output(content))
 
-    def summarize_case(self, case_number):
-        ds = self.ds_querier.get_ds(CONFIG_SF)
-        return self.__stream(ds.summarize_case(case_number))
+    def custom_api(self, ds_type, action, data):
+        ds = self.ds_querier.get_ds(ds_type)
+        content = ds.custom_api(action, data)
+        return self.__stream(ds.generate_output(content))
 
     def clear_history(self, session):
         if self.memory is None:

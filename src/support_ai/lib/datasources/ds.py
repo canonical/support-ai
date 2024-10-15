@@ -22,5 +22,9 @@ class Datasource(ABC):
         return NotImplemented
 
     @abstractmethod
+    def custom_api(self, action, data):
+        return NotImplemented
+
+    @abstractmethod
     def generate_output(self, content):
         return NotImplemented

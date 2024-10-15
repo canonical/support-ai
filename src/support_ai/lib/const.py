@@ -30,4 +30,7 @@ CONFIG_LLM_REMOTE_URL = 'url'
 CONFIG_LLM_REMOTE_TOKEN = 'token'
 CONFIG_LLM_REMOTE_HOSTNAME = 'hostname'
 
+# Actions
+SUMMARIZE_CASE = 'summarize_case'
 META_DIR = 'metadata/'
+CASE_NUMBER = 'case_number'

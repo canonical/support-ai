@@ -2,6 +2,7 @@ import argparse
 from flask import Blueprint, Flask, jsonify, request, Response
 from .lib.chain import Chain
 from .utils import get_config
+from .lib import const as const
 
 
 app = Flask(__name__)
@@ -23,12 +24,14 @@ def ask_ai():
 
 @api_blueprint.route('/summarize_case', methods=['POST'])
 def summarize_case():
-    case_number = request.form.get('case_number')
-
-    if case_number is None:
+    if 'case_number' not in request.form:
         return 'Case number not specified', 400
+
+    data = {
+            const.CASE_NUMBER: request.form.get('case_number')
+            }
     try:
-        return Response(chain.summarize_case(case_number), mimetype='text/plain')
+        return Response(chain.custom_api(const.CONFIG_SF, const.SUMMARIZE_CASE, data), mimetype='text/plain')
     except ValueError:
         return 'Service unavailable', 400
 
