@@ -1,8 +1,9 @@
-FROM python:3.11
+FROM ubuntu:22.04
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 
+RUN apt update && apt install -y python3 python3-pip git
 RUN pip install flit
 
 COPY . $APP_HOME
