@@ -18,7 +18,7 @@ class Datasource(ABC):
         return NotImplemented
 
     @abstractmethod
-    def get_content(self, doc):
+    def get_content(self, metadata):
         return NotImplemented
 
     @abstractmethod
