@@ -81,6 +81,6 @@ def docs_map_reduce(llm, docs, map_prompt, reduce_prompt):
             | llm
             | StrOutputParser()
             )
-    map_reduce = (map_as_doc_chain.map() | collapse | reduce_chain)
+    map_reduce = map_as_doc_chain.map() | collapse | reduce_chain
 
     return map_reduce.invoke(docs, config={"max_concurrency": 5})

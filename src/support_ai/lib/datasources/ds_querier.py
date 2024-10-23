@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from .. import const as const
+from .. import const
 from ..context import BaseContext
 from ..vectorstore import VectorStore
 from .utils import get_datasources

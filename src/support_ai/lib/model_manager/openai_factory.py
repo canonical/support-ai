@@ -1,6 +1,6 @@
 from langchain_community.llms import OpenAI
 from langchain_community.embeddings import OpenAIEmbeddings
-from .. import const as const
+from .. import const
 from .model_factory import ModelFactory
 
 

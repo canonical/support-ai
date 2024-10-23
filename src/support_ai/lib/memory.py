@@ -5,7 +5,7 @@ from langchain_community.chat_message_histories import MongoDBChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from . import const as const
+from . import const
 
 
 class Memory:
@@ -24,10 +24,8 @@ class Memory:
                         connection_string=self.db_connection,
                         session_id=session
                         )
-                self.session_memories[session] = ConversationSummaryBufferMemory(chat_memory=memory,
-                                                                                 llm=self.llm,
-                                                                                 return_messages=True
-                                                                                 )
+                self.session_memories[session] = ConversationSummaryBufferMemory(
+                        chat_memory=memory, llm=self.llm, return_messages=True)
             return self.session_memories[session]
 
     def integrate(self, session, query, context):

@@ -1,11 +1,11 @@
 import json
-import requests
 from typing import Any, List, Mapping, Optional
+import requests
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
 from pydantic import BaseModel
-from .. import const as const
+from .. import const
 from .model_factory import ModelFactory
 
 

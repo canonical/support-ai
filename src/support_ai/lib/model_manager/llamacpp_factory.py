@@ -1,6 +1,6 @@
 from langchain_community.llms import LlamaCpp
 from langchain_community.embeddings import LlamaCppEmbeddings
-from .. import const as const
+from .. import const
 from .model_factory import ModelFactory
 
 

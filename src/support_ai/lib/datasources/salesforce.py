@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from .. import const as const
+from .. import const
 from ..context import BaseContext
 from ..utils.docs_chain import docs_refine
 from ..utils.lru import timed_lru_cache
@@ -134,7 +134,8 @@ class SalesforceSource(BaseContext, Datasource):
     def __translate_into_dialogs(self, records):
         dialogs = Dialogs()
         for comment in records:
-            _records = self.sf.query_all(f'SELECT FirstName FROM User WHERE Id = \'{comment["CreatedById"]}\'')
+            _records = self.sf.query_all(
+                    f'SELECT FirstName FROM User WHERE Id = \'{comment["CreatedById"]}\'')
             firstname = _records['records'][0]['FirstName']
             dialogs.append(firstname, comment["CommentBody"])
         return dialogs
@@ -202,8 +203,9 @@ class SalesforceSource(BaseContext, Datasource):
         return '\n'.join(run_fn_in_parallel(fn_args, 3))
 
     def __get_content(self, case_number):
-        case = self.sf.query_all(f'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
-                                 f'WHERE CaseNumber = \'{case_number}\'')['records'][0]
+        case = self.sf.query_all(
+                'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
+                f'WHERE CaseNumber = \'{case_number}\'')['records'][0]
         records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
                                      f'WHERE ParentId = \'{case["Id"]}\' AND IsPublished = True '
                                      f'ORDER BY LastModifiedDate')
@@ -225,7 +227,8 @@ class SalesforceSource(BaseContext, Datasource):
         match action:
             case const.SUMMARIZE_CASE:
                 if const.CASE_NUMBER not in data:
-                    raise ValueError(f'The {const.CASE_NUMBER} is missing from the data for the {action} action')
+                    raise ValueError(
+                            f'The {const.CASE_NUMBER} is missing from the data for the {action} action')
                 return self.__get_content(data[const.CASE_NUMBER])
             case _:
                 raise ValueError(f'The {action} action is not implemented.')

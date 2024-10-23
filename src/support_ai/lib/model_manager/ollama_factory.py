@@ -1,6 +1,6 @@
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
-from .. import const as const
+from .. import const
 from .model_factory import ModelFactory
 
 

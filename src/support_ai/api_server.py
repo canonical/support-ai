@@ -3,7 +3,7 @@ from flask import Blueprint, Flask, jsonify, request, Response
 from flask_restful import Api, Resource
 from .lib.chain import Chain
 from .utils import get_config
-from .lib import const as const
+from .lib import const
 
 
 app = Flask(__name__)
@@ -20,7 +20,8 @@ class AI(Resource):
         if query is None:
             return {'message': 'Query not specified'}, 400
         try:
-            return Response(chain.ask(query, ds_type=datasource, session=session), mimetype='text/plain')
+            return Response(chain.ask(query, ds_type=datasource, session=session),
+                            mimetype='text/plain')
         except ValueError:
             return {'message': 'Service unavailable'}, 400
 
@@ -31,7 +32,8 @@ class Salesforce(Resource):
 
         data = {const.CASE_NUMBER: case_number}
         try:
-            return Response(chain.custom_api(const.CONFIG_SF, const.SUMMARIZE_CASE, data), mimetype='text/plain')
+            return Response(chain.custom_api(const.CONFIG_SF, const.SUMMARIZE_CASE, data),
+                            mimetype='text/plain')
         except ValueError:
             return {'message': 'Service unavailable'}, 400
 

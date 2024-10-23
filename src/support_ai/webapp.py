@@ -1,7 +1,7 @@
 import os
-import streamlit as st
 import time
 import requests
+import streamlit as st
 
 
 st.title('Support AI')
@@ -12,11 +12,11 @@ case_number = st.text_area(label='CaseNumber',
                      label_visibility='hidden')
 
 if case_number:
-    url = f'{api_svc_url}/salesforce/{case_number}/summary'
+    URL = f'{api_svc_url}/salesforce/{case_number}/summary'
 
     st.session_state.content = ''
     try:
-        response = requests.get(url, stream=True)
+        response = requests.get(URL, stream=True)
         with st.empty():
             for token in response.iter_content():
                 st.session_state.content += "  \n" if token == b'\n' else token.decode('utf-8')

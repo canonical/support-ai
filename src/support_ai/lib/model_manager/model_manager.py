@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-from .. import const as const
+from .. import const
 from .huggingface_factory import HuggingFaceFactory
 from .llamacpp_factory import LlamaCppFactory
 from .ollama_factory import OllamaFactory
@@ -58,7 +58,8 @@ class ModelManager:
         model = Model(None, None)
         if const.CONFIG_LLM in config:
             if config[const.CONFIG_LLM] not in self.__models:
-                raise ValueError(f'The llms doesn\'t contain a llm named "{config[const.CONFIG_LLM]}"')
+                raise ValueError(
+                        f'The llms doesn\'t contain a llm named "{config[const.CONFIG_LLM]}"')
             llm_name = config[const.CONFIG_LLM]
             if self.__models[llm_name][LLM_INST] is None:
                 llm_config = self.__models[llm_name][LLM_CONFIG]
@@ -67,10 +68,12 @@ class ModelManager:
 
         if const.CONFIG_EMBEDDINGS in config:
             if config[const.CONFIG_EMBEDDINGS] not in self.__models:
-                raise ValueError(f'The llms doesn\'t contain a llm named "{config[const.CONFIG_EMBEDDINGS]}"')
+                raise ValueError(
+                        f'The llms doesn\'t contain a llm named "{config[const.CONFIG_EMBEDDINGS]}"')
             embeddings_name = config[const.CONFIG_EMBEDDINGS]
             if self.__models[embeddings_name][EMBEDDINGS_INST] is None:
                 embeddings_config = self.__models[embeddings_name][LLM_CONFIG]
-                self.__models[embeddings_name][EMBEDDINGS_INST] = get_model(embeddings_config).create_embeddings()
+                self.__models[embeddings_name][EMBEDDINGS_INST] = \
+                        get_model(embeddings_config).create_embeddings()
             model.embeddings = self.__models[embeddings_name][EMBEDDINGS_INST]
         return model

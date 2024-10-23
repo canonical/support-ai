@@ -1,4 +1,4 @@
-from .. import const as const
+from .. import const
 from .kb import KnowledgeBaseSource
 from .salesforce import SalesforceSource
 

@@ -4,7 +4,7 @@ from io import StringIO
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from .. import const as const
+from .. import const
 from ..context import BaseContext
 from ..utils.lru import timed_lru_cache
 from .ds import Data, Content, Datasource
@@ -75,8 +75,8 @@ class KnowledgeBaseSource(BaseContext, Datasource):
             conditions.append(f'LastModifiedDate >= {start_date.isoformat()}T00:00:00Z')
         if end_date is not None:
             conditions.append(f'LastModifiedDate < {end_date.isoformat()}T00:00:00Z')
-        conditions.append(f'Knowledge_1_Approval_Status__c = \'Approval Complete\'')
-        conditions.append(f'PublishStatus = \'Online\'')
+        conditions.append('Knowledge_1_Approval_Status__c = \'Approval Complete\'')
+        conditions.append('PublishStatus = \'Online\'')
 
         for condition in conditions:
             if clause:
@@ -114,7 +114,7 @@ class KnowledgeBaseSource(BaseContext, Datasource):
                 {},
                 self.__get_summary(strip_tags(article['records'][0]['Knowledge_1_Solution__c']))
                 )
-    
+
     def custom_api(self, action, data):
         raise ValueError(f'The {action} action is not implemented.')
 
