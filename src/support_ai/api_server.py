@@ -1,5 +1,6 @@
 import argparse
 from flask import Blueprint, Flask, jsonify, request, Response
+from flask_restful import Api, Resource
 from .lib.chain import Chain
 from .utils import get_config
 from .lib import const as const
@@ -8,41 +9,40 @@ from .lib import const as const
 app = Flask(__name__)
 chain = None
 api_blueprint = Blueprint('api', __name__)
+api = Api(api_blueprint)
 
-@api_blueprint.route('/ask_ai', methods=['POST'])
-def ask_ai():
-    query = request.form.get('query')
-    datasource = request.form.get('datasource')
-    session = request.form.get('session')
+class AI(Resource):
+    def get(self):
+        query = request.args.get('query')
+        datasource = request.args.get('datasource')
+        session = request.args.get('session')
 
-    if query is None:
-        return 'Query not specified', 400
-    try:
-        return Response(chain.ask(query, ds_type=datasource, session=session), mimetype='text/plain')
-    except ValueError:
-        return 'Service unavailable', 400
+        if query is None:
+            return {'message': 'Query not specified'}, 400
+        try:
+            return Response(chain.ask(query, ds_type=datasource, session=session), mimetype='text/plain')
+        except ValueError:
+            return {'message': 'Service unavailable'}, 400
 
-@api_blueprint.route('/summarize_case', methods=['POST'])
-def summarize_case():
-    if 'case_number' not in request.form:
-        return 'Case number not specified', 400
+class Salesforce(Resource):
+    def get(self, case_number):
+        if case_number is None:
+            return {'message': 'Case number not specified'}, 400
 
-    data = {
-            const.CASE_NUMBER: request.form.get('case_number')
-            }
-    try:
-        return Response(chain.custom_api(const.CONFIG_SF, const.SUMMARIZE_CASE, data), mimetype='text/plain')
-    except ValueError:
-        return 'Service unavailable', 400
+        data = {const.CASE_NUMBER: case_number}
+        try:
+            return Response(chain.custom_api(const.CONFIG_SF, const.SUMMARIZE_CASE, data), mimetype='text/plain')
+        except ValueError:
+            return {'message': 'Service unavailable'}, 400
 
-@api_blueprint.route('/clear_history', methods=['POST'])
-def clear_history():
-    session = request.form.get('session')
+class History(Resource):
+    def delete(self):
+        session = request.args.get('session')
 
-    if session is None:
-        return 'Session not specified', 400
-    chain.clear_history(session)
-    return jsonify(success=True)
+        if session is None:
+            return {'message': 'Session not specified'}, 400
+        chain.clear_history(session)
+        return jsonify(success=True)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Command line tool for support-ai')
@@ -54,6 +54,10 @@ def main():
     args = parse_args()
     config = get_config(args.config)
     chain = Chain(config)
+
+    api.add_resource(AI, '/ai')
+    api.add_resource(Salesforce, '/salesforce/<string:case_number>/summary')
+    api.add_resource(History, '/history')
 
     app.register_blueprint(api_blueprint, url_prefix='/api')
     app.run(host='0.0.0.0', port=8080, debug=False, use_reloader=False)

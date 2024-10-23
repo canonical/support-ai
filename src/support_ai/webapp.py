@@ -12,12 +12,11 @@ case_number = st.text_area(label='CaseNumber',
                      label_visibility='hidden')
 
 if case_number:
-    url = api_svc_url + 'summarize_case'
-    data = {'case_number': case_number}
+    url = f'{api_svc_url}/salesforce/{case_number}/summary'
 
     st.session_state.content = ''
     try:
-        response = requests.post(url, data=data)
+        response = requests.get(url, stream=True)
         with st.empty():
             for token in response.iter_content():
                 st.session_state.content += "  \n" if token == b'\n' else token.decode('utf-8')

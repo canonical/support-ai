@@ -11,6 +11,7 @@ dynamic = ["version", "description"]
 dependencies = [
   "chromadb",
   "flask",
+  "flask_restful",
   "langchain",
   "langchain-community",
   "llama-cpp-python",
