@@ -4,9 +4,10 @@ origdir = os.getcwd()
 gitdir = origdir + '/git-data'
 os.chdir("linux")
 
-#cmd = os.popen('git log --since="2023-01-01" --grep="^mm:" --grep="^mm/.*:" --oneline')
-cmd = os.popen('git log --since="2023-01-01" --grep="^net:" --grep="^net/.*:" --oneline '
-               '| grep -v " Merge branch "')
+# cmd = os.popen('git log --since="2023-01-01" --grep="^mm:" --grep="^mm/.*:"''
+#                ' --oneline')
+cmd = os.popen('git log --since="2023-01-01" --grep="^net:" --grep="^net/.*:"'
+               ' --oneline | grep -v " Merge branch "')
 output = cmd.read()
 output_list = output.splitlines()
 

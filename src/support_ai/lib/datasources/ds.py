@@ -1,16 +1,19 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
+
 @dataclass
 class Data:
     document: str
     metadata: dict
     id: str
 
+
 @dataclass
 class Content:
     metadata: dict
     summary: str
+
 
 class Datasource(ABC):
     @abstractmethod

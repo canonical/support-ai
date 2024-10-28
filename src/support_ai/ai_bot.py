@@ -1,13 +1,17 @@
 import argparse
 import uuid
+
 from .lib.chain import Chain
 from .utils import get_config
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Command line tool for support-ai')
-    parser.add_argument('--config', type=str, default=None, help='Config path')
+    parser = argparse.ArgumentParser(
+        description='Command line tool for support-ai')
+    parser.add_argument('--config', type=str, default=None,
+                        help='Config path')
     return parser.parse_args()
+
 
 def main():
     args = parse_args()

@@ -1,10 +1,12 @@
 import json
 from typing import Any, List, Mapping, Optional
+
 import requests
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
 from pydantic import BaseModel
+
 from .. import const
 from .model_factory import ModelFactory
 
@@ -66,16 +68,21 @@ class RemoteFactory(ModelFactory):
     def __init__(self, llm_config):
         self.url = llm_config[const.CONFIG_LLM_REMOTE_URL]
         if not self.url:
-            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_URL} in llm config')
+            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_URL} in '
+                             'llm config')
         self.token = llm_config[const.CONFIG_LLM_REMOTE_TOKEN]
         if not self.token:
-            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_TOKEN} in llm config')
+            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_TOKEN} in '
+                             'llm config')
         self.hostname = llm_config[const.CONFIG_LLM_REMOTE_HOSTNAME]
         if not self.hostname:
-            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_HOSTNAME} in llm config')
+            raise ValueError(f'Missing {const.CONFIG_LLM_REMOTE_HOSTNAME} in '
+                             'llm config')
 
     def create_llm(self):
-        return RemoteLLM(url=self.url, token=self.token, hostname=self.hostname)
+        return RemoteLLM(url=self.url, token=self.token,
+                         hostname=self.hostname)
 
     def create_embeddings(self):
-        return RemoteEmbeddings(url=self.url, token=self.token, hostname=self.hostname)
+        return RemoteEmbeddings(url=self.url, token=self.token,
+                                hostname=self.hostname)
