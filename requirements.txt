@@ -1,0 +1,14 @@
+chromadb
+flask
+flask_restful
+langchain
+langchain-community
+llama-cpp-python
+openai
+pymongo
+pyyaml
+sentence-transformers
+simple_salesforce
+streamlit
+torch
+transformers
