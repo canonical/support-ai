@@ -1,0 +1,9 @@
+__pycache__
+.stestr
+.tox
+.vscode
+*.pyc
+dist
+*.egg-info
+cover/
+.coverage
