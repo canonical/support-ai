@@ -1,3 +1,8 @@
+"""
+This module interacts with the Launchpad API to fetch and store bug report
+details for a specified project in a structured format.
+"""
+
 import json
 import os
 import sys

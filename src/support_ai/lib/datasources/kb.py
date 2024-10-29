@@ -1,3 +1,8 @@
+"""
+This module provides functionality for interacting with a Salesforce
+Knowledge Base,
+"""
+
 from html.parser import HTMLParser
 from io import StringIO
 
@@ -22,27 +27,70 @@ SUMMARY_PROMPT = """Write a concise summary of the following:
 
 
 class HtmlTagStripper(HTMLParser):
+    """
+    A custom HTML parser that strips HTML tags and retains the text content.
+    """
+
     def __init__(self):
+        """
+        Initialize the HtmlTagStripper and its attributes.
+        """
         super().__init__()
         self.reset()
         self.strict = False
         self.convert_charrefs = True
         self.text = StringIO()
 
-    def handle_data(self, d):
-        self.text.write(d)
+    def handle_data(self, data):
+        """
+        Handle the text data found between HTML tags.
+
+        Args:
+            data: The text data to be retained.
+        """
+        self.text.write(data)
 
     def get_data(self):
+        """
+        Retrieve the accumulated text content without HTML tags.
+
+        Returns:
+            str: The text content extracted from the HTML input.
+        """
         return self.text.getvalue()
 
 
 def strip_tags(html):
+    """
+    Removes HTML tags from the given string.
+
+    Args:
+        html: The input HTML string to strip.
+
+    Returns:
+        str: The text content extracted from the HTML, without any tags.
+    """
     stripper = HtmlTagStripper()
     stripper.feed(html)
     return stripper.get_data()
 
 
 def get_authentication(auth_config):
+    """
+    Validates and retrieves authentication details from the provided
+    configuration.
+
+    Args:
+        auth_config: The authentication configuration containing
+                     username, password, and token.
+
+    Raises:
+        ValueError: If any of the required authentication fields are missing.
+
+    Returns:
+        dict: A dictionary containing the validated username, password,
+              and token.
+    """
     if const.CONFIG_USERNAME not in auth_config:
         raise ValueError(
             f'The auth config doesn\'t contain {const.CONFIG_USERNAME}')
@@ -60,6 +108,11 @@ def get_authentication(auth_config):
 
 
 class KnowledgeBaseSource(BaseContext, Datasource):
+    """
+    A class for retrieving and processing articles from a Salesforce
+    Knowledge Base.
+    """
+
     def __init__(self, config):
         super().__init__(config)
         if const.CONFIG_AUTHENTICATION not in config:
@@ -70,6 +123,16 @@ class KnowledgeBaseSource(BaseContext, Datasource):
         self.model = self.model_manager.get_model(config)
 
     def __generate_qeustions(self, summary):
+        """
+        Generates questions based on the provided article summary.
+
+        Args:
+            summary: The summary of the article for which to generate
+                     questions.
+
+        Returns:
+            list: A list of questions generated from the summary.
+        """
         prompt = PromptTemplate.from_template(QUESTIONS_PROMPT)
         chain = (
                 {'summary': RunnablePassthrough()}
@@ -80,6 +143,18 @@ class KnowledgeBaseSource(BaseContext, Datasource):
         return chain.invode(summary)
 
     def __get_articles(self, start_date=None, end_date=None):
+        """
+        Retrieves articles from the Salesforce Knowledge Base within the
+        specified date range.
+
+        Args:
+            start_date: The start date for filtering articles.
+            end_date: The end date for filtering articles.
+
+        Yields:
+            Data: A Data object containing generated questions, metadata,
+                  and article ID.
+        """
         clause = ''
         conditions = []
         if start_date is not None:
@@ -111,10 +186,29 @@ class KnowledgeBaseSource(BaseContext, Datasource):
             )
 
     def get_update_data(self, start_date, end_date):
+        """
+        Retrieves update data for the specified date range.
+
+        Args:
+            start_date: The start date for filtering articles.
+            end_date: The end date for filtering articles.
+
+        Returns:
+            generator: A generator yielding Data objects for each article.
+        """
         return self.__get_articles(start_date, end_date)
 
     @timed_lru_cache()
     def __get_summary(self, solution):
+        """
+        Generates a concise summary for the provided solution.
+
+        Args:
+            solution: The solution text to summarize.
+
+        Returns:
+            str: The concise summary generated for the solution.
+        """
         prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
         chain = (
                 {'solution': RunnablePassthrough()}
@@ -125,6 +219,15 @@ class KnowledgeBaseSource(BaseContext, Datasource):
         return chain.invoke(solution)
 
     def get_content(self, metadata):
+        """
+        Retrieves the content of an article based on its metadata.
+
+        Args:
+            metadata: The metadata containing the article ID.
+
+        Returns:
+            Content: A Content object containing the summary of the article.
+        """
         article = self.sf.query_all(
             f'SELECT Knowledge_1_Solution__c FROM Knowledge__kav '
             f'WHERE KnowledgeArticleId = \'{metadata["article_id"]}\'')
@@ -136,7 +239,26 @@ class KnowledgeBaseSource(BaseContext, Datasource):
                 )
 
     def custom_api(self, action, data):
+        """
+        Custom API action placeholder.
+
+        Args:
+            action: The action to perform.
+            data: The data required for the action.
+
+        Raises:
+            ValueError: Indicates that the action is not implemented.
+        """
         raise ValueError(f'The {action} action is not implemented.')
 
     def generate_output(self, content):
+        """
+        Generates the output for the provided content.
+
+        Args:
+            content: The content object to generate output from.
+
+        Returns:
+            str: The summary of the content.
+        """
         return content.summary

@@ -1,3 +1,7 @@
+"""
+This module retrieves and stores git commit logs matching specific criteria.
+"""
+
 import os
 
 origdir = os.getcwd()
@@ -33,17 +37,3 @@ for commit in output_list:
                 f.write(line + '\n')
             if 4 <= i < 50:
                 f.write(line)
-
-        """
-        people = 0
-        for i, line in enumerate(commit_log_post):
-            if 'Fixes: ' in line:
-                people = i
-                break
-            if 'Signed-off-by:' in line:
-                people = i
-                break
-        commit_log_post.insert(people, 'people:')
-        for i, line in enumerate(commit_log_post):
-            f.write(line + '\n')
-        """

@@ -1,3 +1,8 @@
+"""
+This module defines functionality for managing language models and
+embeddings configurations.
+"""
+
 from dataclasses import dataclass
 
 from langchain_core.embeddings import Embeddings
@@ -17,6 +22,20 @@ EMBEDDINGS_INST = 'embeddings_inst'
 
 
 def get_model(llm_config):
+    """
+    Retrieves a model factory based on the given configuration.
+
+    Args:
+        llm_config: Configuration dictionary specifying the model type.
+
+    Returns:
+        object: An instance of the model factory based on the model type
+                specified.
+
+    Raises:
+        ValueError: If 'type' is not specified in llm_config or if the type
+                    is unknown.
+    """
     __factories = {
             const.CONFIG_HUGGINGFACE_PIPELINE: HuggingFaceFactory,
             const.CONFIG_LLAMACPP: LlamaCppFactory,
@@ -34,14 +53,38 @@ def get_model(llm_config):
 
 @dataclass
 class Model:
+    """
+    A data class representing a language model (llm) and its associated
+    embeddings.
+    """
+
     llm: BaseLLM
     embeddings: Embeddings
 
 
 class ModelManager:
+    """
+    A singleton class that manages language model and embedding instances
+    based on a configuration. Ensures that each model is instantiated
+    only once.
+    """
+
     __instance = None
 
     def __new__(cls, config):
+        """
+        Initializes the singleton instance and loads model configurations.
+
+        Args:
+            config: Configuration dictionary containing language models
+                    and embeddings.
+
+        Returns:
+            ModelManager: The singleton instance of ModelManager.
+
+        Raises:
+            ValueError: If required keys are missing in the configuration.
+        """
         if cls.__instance is None:
             self = super(ModelManager, cls).__new__(cls)
             self.__models = {}
@@ -64,6 +107,22 @@ class ModelManager:
         return cls.__instance
 
     def get_model(self, config):
+        """
+        Retrieves or creates a Model instance based on the provided
+        configuration.
+
+        Args:
+            config: Configuration dictionary specifying the language model
+                    and embeddings.
+
+        Returns:
+            Model: A Model instance containing the language model and
+                   embeddings.
+
+        Raises:
+            ValueError: If specified model or embeddings are not in the
+                        configuration.
+        """
         model = Model(None, None)
         if const.CONFIG_LLM in config:
             if config[const.CONFIG_LLM] not in self.__models:

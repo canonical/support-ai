@@ -1,3 +1,7 @@
+"""
+Support-AI Command Line Tool
+"""
+
 import argparse
 import uuid
 
@@ -6,6 +10,12 @@ from .utils import get_config
 
 
 def parse_args():
+    """
+    Parses command-line arguments for the support-ai command line tool.
+
+    Returns:
+        argparse.Namespace: Parsed arguments, including the config file path.
+    """
     parser = argparse.ArgumentParser(
         description='Command line tool for support-ai')
     parser.add_argument('--config', type=str, default=None,
@@ -14,6 +24,13 @@ def parse_args():
 
 
 def main():
+    """
+    Main function to execute the support-ai tool. Initializes configuration,
+    session ID, and input loop for querying the support-ai chain.
+
+    Prompts the user for input queries and processes each input through the
+    chain. Exits if 'exit', 'quit', 'q', 'e', or 'x' is entered.
+    """
     args = parse_args()
     config = get_config(args.config)
     chain = Chain(config)

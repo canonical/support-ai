@@ -1,3 +1,8 @@
+"""
+This module provides a Streamlit web application for interacting with
+Support AI to retrieve summaries for specified case numbers from an
+API service.
+"""
 import os
 import time
 
@@ -17,7 +22,7 @@ if case_number:
 
     st.session_state.content = ''
     try:
-        response = requests.get(URL, stream=True)
+        response = requests.get(URL, stream=True, timeout=3600)
         with st.empty():
             for token in response.iter_content():
                 st.session_state.content += "  \n" \

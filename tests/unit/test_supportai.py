@@ -14,4 +14,3 @@ class TestSupportAI(unittest.TestCase):
         """
         THIS IS A PLACEHOLDER TEST UNTIL WE GET SOME REAL TESTS IMPLEMENTED.
         """
-        pass

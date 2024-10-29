@@ -1,3 +1,7 @@
+"""
+This module defines constants used for configuration within the application.
+"""
+
 CONFIG_FILE = 'config.yaml'
 CONFIG_LLMS = 'llms'
 CONFIG_NAME = 'name'
