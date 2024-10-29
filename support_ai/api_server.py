@@ -1,16 +1,13 @@
 """
 Support-AI API Server
 """
-
 import argparse
 
 from flask import Blueprint, Flask, jsonify, request, Response
 from flask_restful import Api, Resource
-
-from .lib import const
-from .lib.chain import Chain
-from .utils import get_config
-
+from support_ai.lib import const
+from support_ai.lib.chain import Chain
+from support_ai.utils import get_config
 
 app = Flask(__name__)
 chain = None  # pylint: disable=invalid-name

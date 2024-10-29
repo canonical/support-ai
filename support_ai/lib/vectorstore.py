@@ -5,8 +5,7 @@ Vector Store for Embedding and Similarity Search
 import os
 
 from langchain_community.vectorstores import Chroma
-
-from . import const
+from support_ai.lib import const
 
 VECTORDB_DIR = const.META_DIR + 'vectordb'
 COLLECTION_METADATA = 'collection_metadata'

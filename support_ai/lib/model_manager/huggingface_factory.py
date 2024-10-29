@@ -2,12 +2,10 @@
 This module provides a factory for creating Hugging Face-based
 language models and embeddings.
 """
-
 from langchain_community.llms import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
-
-from .. import const
-from .model_factory import ModelFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.model_factory import ModelFactory
 
 
 class HuggingFaceFactory(ModelFactory):

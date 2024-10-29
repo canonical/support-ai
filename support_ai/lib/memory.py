@@ -2,7 +2,6 @@
 This module provides a memory management class that stores and retrieves
 conversation history in a MongoDB database.
 """
-
 from operator import itemgetter
 from threading import Lock
 
@@ -13,8 +12,7 @@ from langchain_community.chat_message_histories import (
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-
-from . import const
+from support_ai.lib import const
 
 
 class Memory:

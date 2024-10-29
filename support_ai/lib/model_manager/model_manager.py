@@ -2,18 +2,16 @@
 This module defines functionality for managing language models and
 embeddings configurations.
 """
-
 from dataclasses import dataclass
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import BaseLLM
-
-from .. import const
-from .huggingface_factory import HuggingFaceFactory
-from .llamacpp_factory import LlamaCppFactory
-from .ollama_factory import OllamaFactory
-from .openai_factory import OpenAIFactory
-from .remote_factory import RemoteFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.huggingface_factory import HuggingFaceFactory
+from support_ai.lib.model_manager.llamacpp_factory import LlamaCppFactory
+from support_ai.lib.model_manager.ollama_factory import OllamaFactory
+from support_ai.lib.model_manager.openai_factory import OpenAIFactory
+from support_ai.lib.model_manager.remote_factory import RemoteFactory
 
 
 LLM_CONFIG = 'llm_config'

@@ -2,12 +2,10 @@
 This module provides the OpenAIFactory class, which is a factory for creating
 OpenAI language models and embeddings based on configuration settings.
 """
-
 from langchain_community.llms import OpenAI
 from langchain_community.embeddings import OpenAIEmbeddings
-
-from .. import const
-from .model_factory import ModelFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.model_factory import ModelFactory
 
 
 class OpenAIFactory(ModelFactory):

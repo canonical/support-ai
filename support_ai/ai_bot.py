@@ -5,8 +5,8 @@ Support-AI Command Line Tool
 import argparse
 import uuid
 
-from .lib.chain import Chain
-from .utils import get_config
+from support_ai.lib.chain import Chain
+from support_ai.utils import get_config
 
 
 def parse_args():

@@ -3,12 +3,10 @@
 This module provides a factory for creating LlamaCpp-based language models
 and embeddings.
 """
-
 from langchain_community.llms import LlamaCpp
 from langchain_community.embeddings import LlamaCppEmbeddings
-
-from .. import const
-from .model_factory import ModelFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.model_factory import ModelFactory
 
 
 class LlamaCppFactory(ModelFactory):

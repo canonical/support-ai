@@ -2,7 +2,6 @@
 This module provides functionality for interacting with a Salesforce
 Knowledge Base,
 """
-
 from html.parser import HTMLParser
 from io import StringIO
 
@@ -10,11 +9,10 @@ import simple_salesforce
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-
-from .. import const
-from ..context import BaseContext
-from ..utils.lru import timed_lru_cache
-from .ds import Data, Content, Datasource
+from support_ai.lib import const
+from support_ai.lib.context import BaseContext
+from support_ai.lib.utils.lru import timed_lru_cache
+from support_ai.lib.datasources.ds import Data, Content, Datasource
 
 
 QUESTIONS_PROMPT = """
