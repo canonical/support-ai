@@ -1,5 +1,6 @@
 from langchain_community.llms import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
+
 from .. import const
 from .model_factory import ModelFactory
 

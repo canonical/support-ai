@@ -1,10 +1,12 @@
 import re
+
 import simple_salesforce
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 from .. import const
 from ..context import BaseContext
 from ..utils.docs_chain import docs_refine
@@ -45,10 +47,10 @@ SOL_JUDGEMENT_PROMPT = """Judge if the following comment has described root caus
     ANS: NO
 
     CONTEXT: "{context}"
-    ANS: """
+    ANS: """  # noqa
 SOL_INITIAL_PROMPT = """Extract the root cause, workaround or solution from the following content in detail:
     "{context}"
-    SOLUTION:"""
+    SOLUTION:"""  # noqa
 SOL_REFINE_PROMPT = """Here's the previous extracted content:
     "{prev_context}"
     Combine it with the following content in detail:
@@ -75,11 +77,14 @@ class Dialogs:
 
 def get_authentication(auth_config):
     if const.CONFIG_USERNAME not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_USERNAME}')
+        raise ValueError(
+            f'The auth config doesn\'t contain {const.CONFIG_USERNAME}')
     if const.CONFIG_PASSWORD not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_PASSWORD}')
+        raise ValueError(
+            f'The auth config doesn\'t contain {const.CONFIG_PASSWORD}')
     if const.CONFIG_TOKEN not in auth_config:
-        raise ValueError(f'The auth config doesn\'t contain {const.CONFIG_TOKEN}')
+        raise ValueError(
+            f'The auth config doesn\'t contain {const.CONFIG_TOKEN}')
     return {
             'username': auth_config[const.CONFIG_USERNAME],
             'password': auth_config[const.CONFIG_PASSWORD],
@@ -91,7 +96,8 @@ class SalesforceSource(BaseContext, Datasource):
     def __init__(self, config):
         super().__init__(config)
         if const.CONFIG_AUTHENTICATION not in config:
-            raise ValueError(f'The config doesn\'t contain {const.CONFIG_AUTHENTICATION}')
+            raise ValueError(
+                f'The config doesn\'t contain {const.CONFIG_AUTHENTICATION}')
         auth = get_authentication(config[const.CONFIG_AUTHENTICATION])
         self.sf = simple_salesforce.Salesforce(**auth)
         self.model = self.model_manager.get_model(config)
@@ -102,15 +108,19 @@ class SalesforceSource(BaseContext, Datasource):
                 chunk_overlap=128,
                 )
         docs = splitter.create_documents([desc])
-        return docs_refine(self.model.llm, docs, SYMPTOM_INITIAL_PROMPT, SYMPTOM_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, SYMPTOM_INITIAL_PROMPT,
+                           SYMPTOM_REFINE_PROMPT)
 
     def __get_cases(self, start_date=None, end_date=None):
         clause = ''
         conditions = []
         if start_date is not None:
-            conditions.append(f'LastModifiedDate >= {start_date.isoformat()}T00:00:00Z')
+            conditions.append(
+                f'LastModifiedDate >= {start_date.isoformat()}T00:00:00Z')
+
         if end_date is not None:
-            conditions.append(f'LastModifiedDate < {end_date.isoformat()}T00:00:00Z')
+            conditions.append(
+                f'LastModifiedDate < {end_date.isoformat()}T00:00:00Z')
 
         for condition in conditions:
             if clause:
@@ -118,13 +128,14 @@ class SalesforceSource(BaseContext, Datasource):
             clause += condition
 
         sql_cmd = 'SELECT Id, CaseNumber, Subject, Description ' + \
-                'FROM Case' + (f' WHERE {clause}' if clause else '')
+                  'FROM Case' + (f' WHERE {clause}' if clause else '')
         for case in self.sf.query_all(sql_cmd)['records']:
             if case['Description'] is None:
                 continue
             yield Data(
                     self.__get_symptom(case['Description']),
-                    {'case_number': case['CaseNumber'], 'subject': case['Subject']},
+                    {'case_number': case['CaseNumber'],
+                     'subject': case['Subject']},
                     case['CaseNumber']
                     )
 
@@ -135,7 +146,8 @@ class SalesforceSource(BaseContext, Datasource):
         dialogs = Dialogs()
         for comment in records:
             _records = self.sf.query_all(
-                    f'SELECT FirstName FROM User WHERE Id = \'{comment["CreatedById"]}\'')
+                        f'SELECT FirstName FROM User WHERE Id = '
+                        f'\'{comment["CreatedById"]}\'')
             firstname = _records['records'][0]['FirstName']
             dialogs.append(firstname, comment["CommentBody"])
         return dialogs
@@ -148,7 +160,8 @@ class SalesforceSource(BaseContext, Datasource):
                 length_function=len,
                 )
         docs = splitter.create_documents(context)
-        return docs_refine(self.model.llm, docs, CONDENSE_INITIAL_PROMPT, CONDENSE_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, CONDENSE_INITIAL_PROMPT,
+                           CONDENSE_REFINE_PROMPT)
 
     def __get_process(self, dialogs):
         user = ''
@@ -165,7 +178,7 @@ class SalesforceSource(BaseContext, Datasource):
         contexts.append((context))
         condensed_contexts = self.__condense_context(contexts)
         process_stmt = ' '.join(condensed_contexts).replace('\n', '')
-        return re.sub('\s+', ' ', process_stmt).strip()
+        return re.sub(r'\s+', ' ', process_stmt).strip()
 
     @run_in_parallel(parallelism=4)
     def __judge_comment(self, comment):
@@ -191,7 +204,8 @@ class SalesforceSource(BaseContext, Datasource):
         for comment in filtered_comments:
             if comment is not None:
                 docs.append(Document(page_content=comment))
-        return docs_refine(self.model.llm, docs, SOL_INITIAL_PROMPT, SOL_REFINE_PROMPT)
+        return docs_refine(self.model.llm, docs, SOL_INITIAL_PROMPT,
+                           SOL_REFINE_PROMPT)
 
     @timed_lru_cache()
     def __get_summary(self, desc, dialogs):
@@ -204,11 +218,14 @@ class SalesforceSource(BaseContext, Datasource):
 
     def __get_content(self, case_number):
         case = self.sf.query_all(
-                'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, CaseNumber, Description FROM Case ' +
+                'SELECT Id, Status, Public_Bug_URL__c, Sev_Lvl__c, ' +
+                'CaseNumber, Description FROM Case ' +
                 f'WHERE CaseNumber = \'{case_number}\'')['records'][0]
-        records = self.sf.query_all(f'SELECT CommentBody, CreatedById FROM CaseComment '
-                                     f'WHERE ParentId = \'{case["Id"]}\' AND IsPublished = True '
-                                     f'ORDER BY LastModifiedDate')
+        records = self.sf.query_all(f'SELECT CommentBody, '
+                                    f'CreatedById FROM CaseComment '
+                                    f'WHERE ParentId = \'{case["Id"]}\' '
+                                    f'AND IsPublished = True '
+                                    f'ORDER BY LastModifiedDate')
         dialogs = self.__translate_into_dialogs(records['records'])
         return Content(
                 {
@@ -228,7 +245,8 @@ class SalesforceSource(BaseContext, Datasource):
             case const.SUMMARIZE_CASE:
                 if const.CASE_NUMBER not in data:
                     raise ValueError(
-                            f'The {const.CASE_NUMBER} is missing from the data for the {action} action')
+                            f'The {const.CASE_NUMBER} is missing from the '
+                            f'data for the {action} action')
                 return self.__get_content(data[const.CASE_NUMBER])
             case _:
                 raise ValueError(f'The {action} action is not implemented.')

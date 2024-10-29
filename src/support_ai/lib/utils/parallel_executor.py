@@ -11,13 +11,15 @@ def run_fn_in_parallel(fn_args: List[Tuple[Any]], parallelism: int):
             results.append(future.result())
     return results
 
+
 def run_in_parallel(parallelism: int):
     def decorator(fn: Callable):
         @functools.wraps(fn)
         def wrapper(self, args_list: List[Tuple[Any]]):
             results = []
             with ThreadPoolExecutor(max_workers=parallelism) as executor:
-                futures = [executor.submit(fn, self, args) for args in args_list]
+                futures = [executor.submit(fn, self, args)
+                           for args in args_list]
                 for future in futures:
                     results.append(future.result())
             return results

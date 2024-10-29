@@ -2,7 +2,8 @@ from functools import lru_cache, wraps
 from datetime import datetime, timedelta
 
 
-def timed_lru_cache(seconds = 60*60, maxsize = 32):
+def timed_lru_cache(seconds=60*60, maxsize=32):
+
     def wrapper_cache(func):
         func = lru_cache(maxsize=maxsize)(func)
         func.lifetime = timedelta(seconds=seconds)

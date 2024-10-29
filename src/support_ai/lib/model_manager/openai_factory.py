@@ -1,5 +1,6 @@
 from langchain_community.llms import OpenAI
 from langchain_community.embeddings import OpenAIEmbeddings
+
 from .. import const
 from .model_factory import ModelFactory
 
@@ -11,7 +12,8 @@ class OpenAIFactory(ModelFactory):
             raise ValueError(f'Missing {const.CONFIG_MODEL} in llm config')
         self.api_key = llm_config[const.CONFIG_LLM_OPENAI_API_KEY]
         if not self.api_key:
-            raise ValueError(f'Missing {const.CONFIG_LLM_OPENAI_API_KEY} in llm config')
+            raise ValueError(f'Missing {const.CONFIG_LLM_OPENAI_API_KEY} in '
+                             'llm config')
 
     def create_llm(self):
         return OpenAI(

@@ -1,5 +1,7 @@
 import os
+
 from langchain_community.vectorstores import Chroma
+
 from . import const
 
 VECTORDB_DIR = const.META_DIR + 'vectordb'
@@ -21,4 +23,5 @@ class VectorStore:
                 .add_texts([data.document], [data.metadata], [data.id])
 
     def similarity_search(self, ds_type, embedding, query):
-        return self.__get_vectorstore(ds_type, embedding).similarity_search(query)
+        return self.__get_vectorstore(ds_type,
+                                      embedding).similarity_search(query)

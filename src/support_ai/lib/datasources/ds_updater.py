@@ -1,6 +1,7 @@
 import os
 import threading
 from datetime import datetime, timedelta
+
 from ..const import META_DIR
 from ..context import BaseContext
 from ..vectorstore import VectorStore
@@ -11,10 +12,12 @@ UPDATE_TIME = META_DIR + 'update_time'
 TIME_FORMAT = '%m/%d/%Y'
 TIMER_INTERVAL = 24*60*60
 
+
 class RepeatTimer(threading.Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
+
 
 class DSUpdater(BaseContext):
     def __init__(self, config):

@@ -1,17 +1,22 @@
 from operator import itemgetter
 from threading import Lock
+
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain_community.chat_message_histories import MongoDBChatMessageHistory
+from langchain_community.chat_message_histories import (
+    MongoDBChatMessageHistory
+)
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+
 from . import const
 
 
 class Memory:
     def __init__(self, config, llm):
         if const.CONFIG_DB_CONNECTION not in config:
-            raise ValueError(f'The config doesn\'t contain {const.CONFIG_DB_CONNECTION}')
+            raise ValueError(
+                f'The config doesn\'t contain {const.CONFIG_DB_CONNECTION}')
         self.db_connection = config[const.CONFIG_DB_CONNECTION]
         self.llm = llm
         self.mutex = Lock()
@@ -24,8 +29,10 @@ class Memory:
                         connection_string=self.db_connection,
                         session_id=session
                         )
-                self.session_memories[session] = ConversationSummaryBufferMemory(
-                        chat_memory=memory, llm=self.llm, return_messages=True)
+                self.session_memories[session] = \
+                    ConversationSummaryBufferMemory(chat_memory=memory,
+                                                    llm=self.llm,
+                                                    return_messages=True)
             return self.session_memories[session]
 
     def integrate(self, session, query, context):
@@ -37,7 +44,8 @@ class Memory:
             ])
         chain = (
                 RunnablePassthrough.assign(
-                    history=RunnableLambda(memory.load_memory_variables) | itemgetter('history')
+                    history=RunnableLambda(memory.load_memory_variables) |
+                    itemgetter('history')
                     )
                 | prompt
                 | self.llm
