@@ -4,7 +4,7 @@ foundational context for initializing and managing models using
 a ModelManager instance.
 """
 
-from .model_manager.model_manager import ModelManager
+from support_ai.lib.model_manager.model_manager import ModelManager
 
 
 class BaseContext:  # pylint: disable=too-few-public-methods

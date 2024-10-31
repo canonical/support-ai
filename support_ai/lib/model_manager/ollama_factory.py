@@ -2,12 +2,10 @@
 This module provides a factory for creating Ollama-based chat models
 and embeddings.
 """
-
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
-
-from .. import const
-from .model_factory import ModelFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.model_factory import ModelFactory
 
 
 class OllamaFactory(ModelFactory):

@@ -2,7 +2,6 @@
 This module contains classes for interacting with remote language models and
 embeddings via HTTP requests.
 """
-
 import json
 from typing import Any, List, Mapping, Optional
 
@@ -11,9 +10,8 @@ from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models.llms import LLM
 from pydantic import BaseModel
-
-from .. import const
-from .model_factory import ModelFactory
+from support_ai.lib import const
+from support_ai.lib.model_manager.model_factory import ModelFactory
 
 
 class RemoteLLM(LLM):

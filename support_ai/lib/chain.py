@@ -2,10 +2,10 @@
 Chain Module for Processing Queries with Context and Memory
 """
 
-from . import const
-from .context import BaseContext
-from .datasources.ds_querier import DSQuerier
-from .memory import Memory
+from support_ai.lib import const
+from support_ai.lib.context import BaseContext
+from support_ai.lib.datasources.ds_querier import DSQuerier
+from support_ai.lib.memory import Memory
 
 
 class Chain(BaseContext):

@@ -7,10 +7,10 @@ import os
 import threading
 from datetime import datetime, timedelta
 
-from ..const import META_DIR
-from ..context import BaseContext
-from ..vectorstore import VectorStore
-from .utils import get_datasources
+from support_ai.lib.const import META_DIR
+from support_ai.lib.context import BaseContext
+from support_ai.lib.vectorstore import VectorStore
+from support_ai.lib.datasources.utils import get_datasources
 
 
 UPDATE_TIME = META_DIR + 'update_time'

@@ -10,13 +10,15 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from .. import const
-from ..context import BaseContext
-from ..utils.docs_chain import docs_refine
-from ..utils.lru import timed_lru_cache
-from ..utils.parallel_executor import run_fn_in_parallel, run_in_parallel
-from .ds import Data, Content, Datasource
+from support_ai.lib import const
+from support_ai.lib.context import BaseContext
+from support_ai.lib.utils.docs_chain import docs_refine
+from support_ai.lib.utils.lru import timed_lru_cache
+from support_ai.lib.utils.parallel_executor import (
+  run_fn_in_parallel,
+  run_in_parallel,
+)
+from support_ai.lib.datasources.ds import Data, Content, Datasource
 
 
 SYMPTOM_INITIAL_PROMPT = """Summarize symptom of the following content:

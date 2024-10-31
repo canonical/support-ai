@@ -5,8 +5,7 @@ This module provides functionality to load configuration data from YAML files.
 import pkgutil
 
 import yaml
-
-from .lib import const
+from support_ai.lib import const
 
 
 def get_config(path):

@@ -2,10 +2,9 @@
 This module provides functionality to retrieve and instantiate data sources
 based on the configuration provided.
 """
-
-from .. import const
-from .kb import KnowledgeBaseSource
-from .salesforce import SalesforceSource
+from support_ai.lib import const
+from support_ai.lib.datasources.kb import KnowledgeBaseSource
+from support_ai.lib.datasources.salesforce import SalesforceSource
 
 _ds_mapping: dict = {
     const.CONFIG_SF: SalesforceSource,

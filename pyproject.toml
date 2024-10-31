@@ -25,6 +25,9 @@ dependencies = [
   "transformers",
 ]
 
+[tool.flit.module]
+name = "support_ai"
+
 [project.scripts]
 ai-bot = "support_ai.ai_bot:main"
 ds-updater = "support_ai.ds_updater:main"

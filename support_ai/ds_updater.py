@@ -7,8 +7,8 @@ import signal
 import sys
 import time
 
-from .lib.datasources.ds_updater import DSUpdater
-from .utils import get_config
+from support_ai.lib.datasources.ds_updater import DSUpdater
+from support_ai.utils import get_config
 
 
 def parse_args():

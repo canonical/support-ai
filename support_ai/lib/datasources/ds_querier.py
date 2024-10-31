@@ -3,15 +3,13 @@ This module provides the DSQuerier class, which is responsible for
 querying different data sources based on the provided configuration
 and user queries.
 """
-
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-
-from .. import const
-from ..context import BaseContext
-from ..vectorstore import VectorStore
-from .utils import get_datasources
+from support_ai.lib import const
+from support_ai.lib.context import BaseContext
+from support_ai.lib.vectorstore import VectorStore
+from support_ai.lib.datasources.utils import get_datasources
 
 
 CLASSIFICATION_PROMPT = """
